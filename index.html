@@ -605,7 +605,7 @@
       <div class="logo">🏠 우리가족 마음 저장소</div>
       <div style="display:flex;align-items:center;gap:10px;">
         <span class="day-badge">함께한 지 <span id="days-count">7,753</span>일째</span>
-        <button class="logout-btn" onclick="goSettings()" style="gap:4px;">
+        <button class="logout-btn"  style="gap:4px;">
           <span class="material-symbols-outlined" style="font-size:14px;">settings</span>
           <span id="board-username"></span>
         </button>
@@ -635,10 +635,10 @@
 <div id="screen-write" class="screen">
   <header class="topbar">
     <div class="topbar-inner">
-      <div class="logo" onclick="goBoard()">🏠 우리가족 마음 저장소</div>
+      <div class="logo" >🏠 우리가족 마음 저장소</div>
       <div style="display:flex;align-items:center;gap:10px;">
         <span class="day-badge">함께한 지 <span id="days-count">7,753</span>일째</span>
-        <button class="logout-btn" onclick="goSettings()" style="gap:4px;">
+        <button class="logout-btn"  style="gap:4px;">
           <span class="material-symbols-outlined" style="font-size:14px;">settings</span>
           <span id="write-username"></span>
         </button>
@@ -649,7 +649,7 @@
   <div class="write-wrap">
 
     <!-- 뒤로가기 -->
-    <button id="write-back-btn" onclick="goWriteBack()" style="display:flex;align-items:center;gap:4px;background:none;border:none;cursor:pointer;color:#9e9e9e;font-family:'Nunito Sans',sans-serif;font-size:13px;margin-bottom:28px;padding:0;">
+    <button id="write-back-btn"  style="display:flex;align-items:center;gap:4px;background:none;border:none;cursor:pointer;color:#9e9e9e;font-family:'Nunito Sans',sans-serif;font-size:13px;margin-bottom:28px;padding:0;">
       <span class="material-symbols-outlined" style="font-size:18px;">arrow_back</span> <span id="write-back-label">게시판으로</span>
     </button>
 
@@ -657,11 +657,11 @@
     <div style="margin-bottom:16px;">
       <p style="font-family:'Nunito Sans',sans-serif;font-size:11px;font-weight:600;color:#9e9e9e;margin-bottom:10px;letter-spacing:.04em;">편지지 색상</p>
       <div class="color-swatches">
-        <div class="swatch active" data-bg="#fce4ec" style="background:#fce4ec;border-color:#78555e;" onclick="setColor(this,'#fce4ec')"></div>
-        <div class="swatch" data-bg="#e3f2fd" style="background:#e3f2fd;" onclick="setColor(this,'#e3f2fd')"></div>
-        <div class="swatch" data-bg="#fffde7" style="background:#fffde7;" onclick="setColor(this,'#fffde7')"></div>
-        <div class="swatch" data-bg="#e8f5e9" style="background:#e8f5e9;" onclick="setColor(this,'#e8f5e9')"></div>
-        <div class="swatch" data-bg="#f3e5f5" style="background:#f3e5f5;" onclick="setColor(this,'#f3e5f5')"></div>
+        <div class="swatch active" data-bg="#fce4ec" style="background:#fce4ec;border-color:#78555e;" ></div>
+        <div class="swatch" data-bg="#e3f2fd" style="background:#e3f2fd;" ></div>
+        <div class="swatch" data-bg="#fffde7" style="background:#fffde7;" ></div>
+        <div class="swatch" data-bg="#e8f5e9" style="background:#e8f5e9;" ></div>
+        <div class="swatch" data-bg="#f3e5f5" style="background:#f3e5f5;" ></div>
       </div>
     </div>
 
@@ -669,9 +669,9 @@
     <div style="margin-bottom:28px;">
       <p style="font-family:'Nunito Sans',sans-serif;font-size:11px;font-weight:600;color:#9e9e9e;margin-bottom:10px;letter-spacing:.04em;">글씨체</p>
       <div class="font-btns">
-        <button class="font-btn active" data-font="'Nanum Pen Script',cursive" onclick="setFont(this,'\'Nanum Pen Script\',cursive')">나눔 펜</button>
-        <button class="font-btn" data-font="'Nanum Myeongjo',serif" onclick="setFont(this,'\'Nanum Myeongjo\',serif')">나눔 명조</button>
-        <button class="font-btn" data-font="'Gaegu',cursive" onclick="setFont(this,'\'Gaegu\',cursive')">개구</button>
+        <button class="font-btn active" data-font="'Nanum Pen Script',cursive" >나눔 펜</button>
+        <button class="font-btn" data-font="'Nanum Myeongjo',serif" >나눔 명조</button>
+        <button class="font-btn" data-font="'Gaegu',cursive" >개구</button>
       </div>
     </div>
 
@@ -701,27 +701,27 @@
       <div style="margin-bottom:8px;">
         <p style="font-family:'Nunito Sans',sans-serif;font-size:11px;font-weight:600;color:#9e9e9e;margin-bottom:10px;letter-spacing:.04em;">사진 첨부 (최대 3장)</p>
         <div class="photo-upload-area" id="photo-area">
-          <div class="photo-slot" onclick="triggerUpload(0)">
+          <div class="photo-slot" >
             <span class="material-symbols-outlined" style="font-size:22px;">add_photo_alternate</span>
             <span>사진 추가</span>
           </div>
-          <div class="photo-slot" onclick="triggerUpload(1)">
+          <div class="photo-slot" >
             <span class="material-symbols-outlined" style="font-size:22px;">add_photo_alternate</span>
             <span>사진 추가</span>
           </div>
-          <div class="photo-slot" onclick="triggerUpload(2)">
+          <div class="photo-slot" >
             <span class="material-symbols-outlined" style="font-size:22px;">add_photo_alternate</span>
             <span>사진 추가</span>
           </div>
-          <input type="file" id="file-input" accept="image/*" style="display:none;" onchange="handlePhoto(event)"/>
+          <input type="file" id="file-input" accept="image/*" style="display:none;" />
         </div>
       </div>
     </div>
 
     <!-- 버튼 -->
     <div class="btn-row" style="margin-top:28px;">
-      <button class="btn-cancel" id="btn-cancel-write" onclick="goWriteBack()">취소</button>
-      <button class="btn-send" id="btn-send-write" onclick="submitLetter()">
+      <button class="btn-cancel" id="btn-cancel-write" >취소</button>
+      <button class="btn-send" id="btn-send-write" >
         <span class="material-symbols-outlined" style="font-size:18px;vertical-align:-3px;">send</span> <span id="btn-send-label">편지 보내기</span>
       </button>
     </div>
@@ -957,7 +957,23 @@ function applyFont(font) {
 function resetPhotoSlots() { document.querySelectorAll('.photo-slot').forEach((s,i)=>resetSlot(s,i)); }
 function resetSlot(slot,i) {
   slot.innerHTML='<span class="material-symbols-outlined" style="font-size:22px;">add_photo_alternate</span><span>\uC0AC\uC9C4 \uCD94\uAC00</span>';
-  slot.style.border='1.5px dashed #c8b8ba'; slot.onclick=()=>triggerUpload(i);
+  slot.style.border='1.5px dashed #c8b8ba';
+  slot.onclick = () => triggerUpload(i);
+}
+
+function setSlotWithDelete(slot, i, url) {
+  slot.style.border = 'none';
+  slot.style.position = 'relative';
+  slot.onclick = null;
+  slot.innerHTML = '<img src="' + url + '" style="width:100%;height:100%;object-fit:cover;border-radius:4px;">'
+    + '<button onclick="event.stopPropagation();removePhoto(' + i + ')" style="position:absolute;top:3px;right:3px;width:20px;height:20px;border-radius:50%;background:rgba(0,0,0,0.55);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;">'
+    + '<span class="material-symbols-outlined" style="font-size:13px;color:#fff;">close</span></button>';
+}
+
+function removePhoto(i) {
+  pendingPhotoFiles[i] = null;
+  const slots = document.querySelectorAll('.photo-slot');
+  if (slots[i]) resetSlot(slots[i], i);
 }
 function triggerUpload(slot) { uploadSlot=slot; document.getElementById('file-input').click(); }
 function handlePhoto(e) {
@@ -965,8 +981,8 @@ function handlePhoto(e) {
   pendingPhotoFiles[uploadSlot]=file;
   const url=URL.createObjectURL(file);
   const slots=document.querySelectorAll('.photo-slot');
-  slots[uploadSlot].innerHTML='<img src="'+url+'" style="width:100%;height:100%;object-fit:cover;border-radius:4px;">';
-  slots[uploadSlot].style.border='none'; slots[uploadSlot].onclick=null; e.target.value='';
+  setSlotWithDelete(slots[uploadSlot], uploadSlot, url);
+  e.target.value='';
 }
 async function uploadPhotos(lid) {
   const urls=[];
@@ -1190,6 +1206,71 @@ function bindLoginEvents() {
 }
 
 // ── 초기화
+function bindAllEvents() {
+  // 편지 작성
+  const cancelBtn = document.getElementById('btn-cancel-write');
+  if (cancelBtn) cancelBtn.addEventListener('click', goWriteBack);
+  const sendBtn = document.getElementById('btn-send-write');
+  if (sendBtn) sendBtn.addEventListener('click', submitLetter);
+
+  // 사진 슬롯
+  const slots = document.querySelectorAll('.photo-slot');
+  slots.forEach((s, i) => resetSlot(s, i));
+  const fileInput = document.getElementById('file-input');
+  if (fileInput) fileInput.addEventListener('change', handlePhoto);
+
+  // 색상 스와치
+  document.querySelectorAll('.swatch').forEach(s => {
+    s.addEventListener('click', () => setColor(s, s.dataset.bg));
+  });
+
+  // 폰트 버튼
+  document.querySelectorAll('.font-btn').forEach(b => {
+    b.addEventListener('click', () => setFont(b, b.dataset.font));
+  });
+
+  // 댓글
+  const commentBtn = document.querySelector('.comment-submit');
+  if (commentBtn) commentBtn.addEventListener('click', submitComment);
+  const commentInput = document.getElementById('detail-comment-input');
+  if (commentInput) commentInput.addEventListener('keydown', e => { if(e.key==='Enter') submitComment(); });
+
+  // 설정
+  const nicknameToggle = document.getElementById('nickname-row')?.querySelector('.settings-edit-btn');
+  if (nicknameToggle) nicknameToggle.addEventListener('click', () => toggleForm('nickname-form'));
+  const pwToggle = document.getElementById('password-row')?.querySelector('.settings-edit-btn');
+  if (pwToggle) pwToggle.addEventListener('click', () => toggleForm('password-form'));
+
+  const saveNickBtn = document.querySelector('#nickname-form .settings-save-btn');
+  if (saveNickBtn) saveNickBtn.addEventListener('click', saveNickname);
+  const cancelNickBtn = document.querySelector('#nickname-form .settings-cancel-btn');
+  if (cancelNickBtn) cancelNickBtn.addEventListener('click', () => toggleForm('nickname-form'));
+
+  const savePwBtn = document.querySelector('#password-form .settings-save-btn');
+  if (savePwBtn) savePwBtn.addEventListener('click', savePassword);
+  const cancelPwBtn = document.querySelector('#password-form .settings-cancel-btn');
+  if (cancelPwBtn) cancelPwBtn.addEventListener('click', () => toggleForm('password-form'));
+
+  const nicknameInput = document.getElementById('new-nickname');
+  if (nicknameInput) nicknameInput.addEventListener('keydown', e => { if(e.key==='Enter') saveNickname(); });
+  const newPw2Input = document.getElementById('new-pw2');
+  if (newPw2Input) newPw2Input.addEventListener('keydown', e => { if(e.key==='Enter') savePassword(); });
+
+  // 로그아웃
+  document.querySelectorAll('.settings-danger-btn').forEach(b => b.addEventListener('click', doLogout));
+
+  // 로고/뒤로가기
+  document.querySelectorAll('.logo').forEach(l => l.addEventListener('click', goBoard));
+  const backBtn = document.querySelector('#screen-settings .settings-wrap button');
+
+  // 설정 열기 버튼
+  document.querySelectorAll('.logout-btn').forEach(b => b.addEventListener('click', goSettings));
+
+  // FAB
+  const fab = document.querySelector('.fab-write');
+  if (fab) fab.addEventListener('click', goWrite);
+}
+
 async function init() {
   // 함께한 날 계산 (2005.02.15 기준)
   const birth = new Date(2005, 1, 15);
@@ -1200,7 +1281,7 @@ async function init() {
   });
   await initMembers();
   bindLoginEvents();
-  document.querySelector('.fab-write').addEventListener('click', goWrite);
+  bindAllEvents();
 }
 
 if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',init);}else{init();}
@@ -1212,7 +1293,7 @@ window.submitLetter=submitLetter; window.submitComment=submitComment;
 window.saveNickname=saveNickname; window.savePassword=savePassword;
 window.toggleForm=toggleForm; window.setColor=setColor; window.setFont=setFont;
 window.triggerUpload=triggerUpload; window.handlePhoto=handlePhoto;
-window.goWriteBack=goWriteBack;
+window.goWriteBack=goWriteBack; window.removePhoto=removePhoto;
 
 </script>
 
@@ -1223,10 +1304,10 @@ window.goWriteBack=goWriteBack;
 <div id="screen-detail" class="screen">
   <header class="topbar">
     <div class="topbar-inner">
-      <div class="logo" onclick="goBoard()">🏠 우리가족 마음 저장소</div>
+      <div class="logo" >🏠 우리가족 마음 저장소</div>
       <div style="display:flex;align-items:center;gap:10px;">
         <span class="day-badge">함께한 지 <span id="days-count">7,753</span>일째</span>
-        <button class="logout-btn" onclick="goSettings()" style="gap:4px;">
+        <button class="logout-btn"  style="gap:4px;">
           <span class="material-symbols-outlined" style="font-size:14px;">settings</span>
           <span id="detail-username"></span>
         </button>
@@ -1238,7 +1319,7 @@ window.goWriteBack=goWriteBack;
 
     <!-- 뒤로 + 수정 버튼 -->
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:28px;">
-      <button onclick="goBoard()" style="display:flex;align-items:center;gap:4px;background:none;border:none;cursor:pointer;color:#9e9e9e;font-family:'Nunito Sans',sans-serif;font-size:13px;padding:0;">
+      <button  style="display:flex;align-items:center;gap:4px;background:none;border:none;cursor:pointer;color:#9e9e9e;font-family:'Nunito Sans',sans-serif;font-size:13px;padding:0;">
         <span class="material-symbols-outlined" style="font-size:18px;">arrow_back</span> 게시판으로
       </button>
       <button class="detail-edit-btn" id="detail-edit-btn" style="display:none;" onclick="goEdit()">
@@ -1267,7 +1348,7 @@ window.goWriteBack=goWriteBack;
       <div class="comment-list" id="detail-comment-list"></div>
       <div class="comment-input-row">
         <input class="comment-input" id="detail-comment-input" placeholder="따뜻한 댓글을 남겨보세요..." onkeydown="if(event.key==='Enter') submitComment()">
-        <button class="comment-submit" onclick="submitComment()">남기기</button>
+        <button class="comment-submit" >남기기</button>
       </div>
     </div>
 
@@ -1281,7 +1362,7 @@ window.goWriteBack=goWriteBack;
 <div id="screen-settings" class="screen">
   <header class="topbar">
     <div class="topbar-inner">
-      <div class="logo" onclick="goBoard()">🏠 우리가족 마음 저장소</div>
+      <div class="logo" >🏠 우리가족 마음 저장소</div>
       <span class="day-badge">함께한 지 <span id="days-count">7,753</span>일째</span>
     </div>
   </header>
@@ -1289,7 +1370,7 @@ window.goWriteBack=goWriteBack;
   <div class="settings-wrap">
 
     <!-- 뒤로 -->
-    <button onclick="goBack()" style="display:flex;align-items:center;gap:4px;background:none;border:none;cursor:pointer;color:#9e9e9e;font-family:'Nunito Sans',sans-serif;font-size:13px;margin-bottom:28px;padding:0;">
+    <button  style="display:flex;align-items:center;gap:4px;background:none;border:none;cursor:pointer;color:#9e9e9e;font-family:'Nunito Sans',sans-serif;font-size:13px;margin-bottom:28px;padding:0;">
       <span class="material-symbols-outlined" style="font-size:18px;">arrow_back</span> 돌아가기
     </button>
 
@@ -1307,22 +1388,22 @@ window.goWriteBack=goWriteBack;
       <div class="settings-row" id="nickname-row">
         <span class="settings-row-label">닉네임</span>
         <span class="settings-row-value" id="nickname-display"></span>
-        <button class="settings-edit-btn" onclick="toggleForm('nickname-form', 'nickname-row')">변경</button>
+        <button class="settings-edit-btn" >변경</button>
       </div>
       <div class="settings-edit-form" id="nickname-form">
         <label>새 닉네임</label>
         <input class="settings-edit-input" id="new-nickname" type="text" maxlength="6" placeholder="이름을 입력하세요" onkeydown="if(event.key==='Enter') saveNickname()">
         <p class="settings-msg" id="nickname-msg"></p>
         <div class="settings-form-btns">
-          <button class="settings-cancel-btn" onclick="toggleForm('nickname-form','nickname-row')">취소</button>
-          <button class="settings-save-btn" onclick="saveNickname()">저장</button>
+          <button class="settings-cancel-btn" >취소</button>
+          <button class="settings-save-btn" >저장</button>
         </div>
       </div>
 
       <div class="settings-row" id="password-row">
         <span class="settings-row-label">비밀번호</span>
         <span class="settings-row-value">••••</span>
-        <button class="settings-edit-btn" onclick="toggleForm('password-form','password-row')">변경</button>
+        <button class="settings-edit-btn" >변경</button>
       </div>
       <div class="settings-edit-form" id="password-form">
         <label>현재 비밀번호</label>
@@ -1333,8 +1414,8 @@ window.goWriteBack=goWriteBack;
         <input class="settings-edit-input" id="new-pw2" type="password" maxlength="4" inputmode="numeric" placeholder="••••" onkeydown="if(event.key==='Enter') savePassword()">
         <p class="settings-msg" id="password-msg"></p>
         <div class="settings-form-btns">
-          <button class="settings-cancel-btn" onclick="toggleForm('password-form','password-row')">취소</button>
-          <button class="settings-save-btn" onclick="savePassword()">저장</button>
+          <button class="settings-cancel-btn" >취소</button>
+          <button class="settings-save-btn" >저장</button>
         </div>
       </div>
     </div>
@@ -1347,7 +1428,7 @@ window.goWriteBack=goWriteBack;
 
     <!-- 로그아웃 -->
     <div class="settings-section">
-      <button class="settings-danger-btn" onclick="doLogout()">
+      <button class="settings-danger-btn" >
         <span class="material-symbols-outlined" style="font-size:16px;">logout</span>
         로그아웃
       </button>
