@@ -1,0 +1,1350 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Gaegu:wght@300;400;700&family=Nanum+Pen+Script&family=Nanum+Myeongjo:wght@400;700&family=Nunito+Sans:wght@300;400;600;700&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<style>
+  .material-symbols-outlined { font-variation-settings:"FILL" 0,"wght" 400,"GRAD" 0,"opsz" 48; }
+  body { background-color:#fff8f8; margin:0; }
+
+  /* ── 화면 전환 ── */
+  .screen { display:none; min-height:100vh; }
+  .screen.active { display:block; }
+
+  /* ── 공통 탑바 ── */
+  .topbar {
+    background:rgba(255,248,248,0.92);
+    backdrop-filter:blur(6px);
+    border-bottom:2px dashed #d3c3c5;
+    position:sticky; top:0; z-index:40;
+  }
+  .topbar-inner {
+    max-width:1200px; margin:0 auto;
+    padding:14px 40px;
+    display:flex; justify-content:space-between; align-items:center;
+  }
+  .logo { font-family:'Gaegu',cursive; font-size:28px; font-weight:700; color:#78555e; cursor:pointer; }
+  .day-badge {
+    background:#ffd1dc; color:#78555e;
+    font-family:'Nunito Sans',sans-serif; font-size:12px; font-weight:600;
+    padding:4px 14px; border-radius:9999px; white-space:nowrap;
+  }
+
+  /* ── 빨간 핀 ── */
+  .red-pin { position:absolute; top:-15px; left:50%; transform:translateX(-50%); width:22px; height:26px; z-index:10; }
+  .red-pin::before {
+    content:''; position:absolute; top:0; left:50%; transform:translateX(-50%);
+    width:15px; height:15px;
+    background:radial-gradient(circle at 35% 35%,#ff6b6b,#c0392b);
+    border-radius:50%;
+    box-shadow:0 2px 5px rgba(0,0,0,.35),inset 0 1px 2px rgba(255,255,255,.5);
+  }
+  .red-pin::after {
+    content:''; position:absolute; top:13px; left:50%; transform:translateX(-50%);
+    width:3px; height:13px;
+    background:linear-gradient(to bottom,#999,#bbb);
+    border-radius:0 0 2px 2px;
+  }
+
+  /* ── 편지 카드 ── */
+  .card-pink    { background:#fce4ec; }
+  .card-blue    { background:#e3f2fd; }
+  .card-yellow  { background:#fffde7; }
+  .card-mint    { background:#e8f5e9; }
+  .card-lavender{ background:#f3e5f5; }
+
+  .letter-card {
+    position:relative; padding:22px 18px 18px;
+    box-shadow:5px 5px 14px rgba(0,0,0,.08);
+    border-radius:2px; cursor:pointer;
+    aspect-ratio:4/3;
+    display:flex; flex-direction:column;
+    transition:transform .25s,box-shadow .25s;
+  }
+  .letter-card:hover { transform:rotate(0deg)!important; box-shadow:8px 8px 20px rgba(0,0,0,.13); }
+
+  .card-pink     .letter-to { color:#880e4f; }
+  .card-blue     .letter-to { color:#0d47a1; }
+  .card-yellow   .letter-to { color:#e65100; }
+  .card-mint     .letter-to { color:#1b5e20; }
+  .card-lavender .letter-to { color:#4a148c; }
+
+  .card-pink     .comment-count { color:#ad1457; }
+  .card-blue     .comment-count { color:#1565c0; }
+  .card-yellow   .comment-count { color:#bf360c; }
+  .card-mint     .comment-count { color:#2e7d32; }
+  .card-lavender .comment-count { color:#6a1b9a; }
+
+  .letter-date { font-family:'Nunito Sans',sans-serif; font-size:10px; color:#9e9e9e; }
+
+  .new-card {
+    border:2px dashed rgba(120,85,94,.25); border-radius:2px; min-height:155px;
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px;
+    cursor:pointer; color:rgba(120,85,94,.4); transition:all .2s;
+  }
+  .new-card:hover { border-color:rgba(120,85,94,.55); color:rgba(120,85,94,.7); background:rgba(252,228,236,.15); }
+
+  /* ── FAB ── */
+  .fab-write {
+    position:fixed; bottom:32px; right:32px; z-index:50;
+    background:#78555e; color:#fff; border:none;
+    padding:14px 28px;
+    font-family:'Nanum Pen Script',cursive; font-size:22px;
+    cursor:pointer; display:flex; align-items:center; gap:8px;
+    border-radius:255px 15px 225px 15px/15px 225px 15px 255px;
+    box-shadow:4px 4px 0 #5e3e47;
+    transition:transform .15s,box-shadow .15s;
+  }
+  .fab-write:hover { transform:translate(-2px,-2px); box-shadow:6px 6px 0 #5e3e47; }
+  .fab-write:active { transform:translate(0,0); box-shadow:2px 2px 0 #5e3e47; }
+
+  /* ── 편지 작성 화면 ── */
+  .write-wrap { max-width:720px; margin:0 auto; padding:48px 40px 120px; }
+
+  .write-paper {
+    position:relative;
+    padding:40px 44px 44px;
+    border-radius:2px;
+    box-shadow:6px 6px 20px rgba(0,0,0,.1);
+    transition:background .3s;
+  }
+  .write-paper .red-pin { top:-16px; }
+
+  /* 색상 스와치 */
+  .color-swatches { display:flex; gap:10px; margin-bottom:24px; }
+  .swatch {
+    width:30px; height:30px; border-radius:50%; cursor:pointer;
+    border:3px solid transparent;
+    transition:transform .15s,border-color .15s;
+  }
+  .swatch:hover { transform:scale(1.15); }
+  .swatch.active { border-color:#78555e; transform:scale(1.15); }
+
+  /* 폰트 선택 */
+  .font-btns { display:flex; gap:8px; margin-bottom:24px; flex-wrap:wrap; }
+  .font-btn {
+    padding:6px 14px; border-radius:9999px;
+    border:1.5px solid #d3c3c5; background:transparent;
+    font-size:14px; cursor:pointer; color:#78555e;
+    transition:all .15s;
+  }
+  .font-btn:hover { border-color:#78555e; background:#fce4ec; }
+  .font-btn.active { border-color:#78555e; background:#78555e; color:#fff; }
+
+  /* 입력 필드 — 밑줄 스타일 */
+  .field-row { display:flex; gap:0; margin-bottom:18px; align-items:flex-end; border-bottom:1.5px solid #c8b8ba; }
+  .field-label { font-family:'Nunito Sans',sans-serif; font-size:11px; font-weight:600; color:#9e9e9e; white-space:nowrap; padding-bottom:6px; margin-right:8px; }
+  .field-input {
+    flex:1; border:none; background:transparent; outline:none;
+    font-size:18px; padding:4px 0 6px;
+    color:#4a3f3f;
+  }
+  .field-input::placeholder { color:#ccc; }
+
+  .content-area {
+    width:100%; border:none; background:transparent; outline:none; resize:none;
+    font-size:18px; line-height:2; color:#4a3f3f; min-height:220px;
+    border-bottom:1.5px solid #c8b8ba; padding:0 0 8px; margin-bottom:24px;
+  }
+  .content-area::placeholder { color:#ccc; }
+
+  /* 사진 업로드 */
+  .photo-upload-area {
+    border:2px dashed #d3c3c5; border-radius:8px;
+    padding:16px; margin-bottom:28px;
+    display:flex; gap:10px; align-items:center; flex-wrap:wrap;
+  }
+  .photo-slot {
+    width:72px; height:72px; border-radius:6px;
+    border:1.5px dashed #c8b8ba; background:rgba(255,255,255,.6);
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    gap:2px; cursor:pointer; color:#b0a0a4; font-size:11px; font-family:'Nunito Sans',sans-serif;
+    transition:border-color .15s,background .15s;
+  }
+  .photo-slot:hover { border-color:#78555e; background:rgba(252,228,236,.4); color:#78555e; }
+
+  /* 하단 버튼 */
+  .btn-row { display:flex; justify-content:flex-end; gap:12px; }
+  .btn-cancel {
+    padding:12px 24px; border:1.5px solid #d3c3c5; border-radius:255px 15px 225px 15px/15px 225px 15px 255px;
+    background:transparent; font-family:'Nanum Pen Script',cursive; font-size:20px;
+    color:#78555e; cursor:pointer; transition:all .15s;
+  }
+  .btn-cancel:hover { background:#f4ecec; }
+  .btn-send {
+    padding:12px 28px; border:none;
+    border-radius:255px 15px 225px 15px/15px 225px 15px 255px;
+    background:#78555e; font-family:'Nanum Pen Script',cursive; font-size:20px;
+    color:#fff; cursor:pointer;
+    box-shadow:3px 3px 0 #5e3e47;
+    transition:transform .15s,box-shadow .15s;
+  }
+  .btn-send:hover { transform:translate(-2px,-2px); box-shadow:5px 5px 0 #5e3e47; }
+
+  .auto-date {
+    font-family:'Nunito Sans',sans-serif; font-size:11px; color:#b0a0a4;
+    margin-bottom:20px;
+  }
+
+  /* 페이드 전환 */
+  @keyframes fadeIn { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
+  .screen.active { animation:fadeIn .25s ease; }
+
+  /* ── 반응형 그리드 ── */
+  .card-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 40px;
+    align-items: start;
+  }
+  @media (max-width: 767px) {
+    .card-grid {
+      grid-template-columns: 1fr;
+      gap: 28px;
+    }
+    .letter-card {
+      aspect-ratio: unset;
+    }
+    .topbar-inner {
+      padding: 12px 20px;
+    }
+    main {
+      padding: 28px 20px 100px !important;
+    }
+  }
+
+  /* ── 편지 상세 화면 ── */
+  .detail-wrap { max-width:720px; margin:0 auto; padding:40px 40px 120px; }
+  .detail-paper {
+    position:relative;
+    padding:44px 48px 40px;
+    border-radius:2px;
+    box-shadow:6px 6px 20px rgba(0,0,0,.1);
+    margin-bottom:32px;
+  }
+  .detail-paper .red-pin { top:-16px; }
+  .detail-header-meta {
+    font-family:'Nunito Sans',sans-serif; font-size:11px; color:#b0a0a4;
+    margin-bottom:20px; display:flex; justify-content:space-between; align-items:center;
+  }
+  .detail-to {
+    font-family:'Nanum Pen Script',cursive; font-size:28px; line-height:1.3;
+    margin-bottom:8px;
+  }
+  .detail-body {
+    font-size:18px; line-height:2.1;
+    margin-bottom:32px; white-space:pre-wrap;
+  }
+  .detail-photos {
+    display:flex; gap:10px; flex-wrap:wrap; margin-bottom:24px;
+  }
+  .detail-photos img {
+    width:120px; height:120px; object-fit:cover; border-radius:4px;
+  }
+  .detail-from {
+    font-family:'Nanum Pen Script',cursive; font-size:20px;
+    text-align:right;
+  }
+  /* 댓글 섹션 */
+  .comment-section {
+    background:#fff; border-radius:12px;
+    border:1px solid #ede4e6;
+    padding:24px 28px;
+  }
+  .comment-section-title {
+    font-family:'Nunito Sans',sans-serif; font-size:13px; font-weight:700;
+    color:#78555e; margin-bottom:16px; display:flex; align-items:center; gap:6px;
+  }
+  .comment-list { display:flex; flex-direction:column; gap:14px; margin-bottom:20px; }
+  .comment-item { display:flex; gap:10px; align-items:flex-start; }
+  .comment-avatar {
+    width:30px; height:30px; border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    font-family:'Nunito Sans',sans-serif; font-size:12px; font-weight:700;
+    flex-shrink:0;
+  }
+  .comment-bubble {
+    flex:1; background:#faf5f6; border-radius:0 10px 10px 10px;
+    padding:10px 14px;
+  }
+  .comment-name {
+    font-family:'Nunito Sans',sans-serif; font-size:11px; font-weight:700;
+    color:#78555e; margin-bottom:3px;
+  }
+  .comment-text {
+    font-family:'Nanum Myeongjo',serif; font-size:14px; color:#4a3f3f; line-height:1.6;
+  }
+  .comment-time {
+    font-family:'Nunito Sans',sans-serif; font-size:10px; color:#c0b0b2; margin-top:4px;
+  }
+  .comment-input-row {
+    display:flex; gap:8px; align-items:center;
+    border-top:1px dashed #e0d4d6; padding-top:16px;
+  }
+  .comment-input {
+    flex:1; border:none; border-bottom:1.5px solid #d3c3c5;
+    background:transparent; outline:none; padding:6px 2px;
+    font-family:'Nanum Myeongjo',serif; font-size:15px; color:#4a3f3f;
+  }
+  .comment-input::placeholder { color:#ccc; }
+  .comment-input:focus { border-bottom-color:#78555e; }
+  .comment-submit {
+    background:#78555e; color:#fff; border:none;
+    padding:8px 18px; border-radius:9999px;
+    font-family:'Nunito Sans',sans-serif; font-size:12px; font-weight:700;
+    cursor:pointer; transition:opacity .15s; white-space:nowrap;
+  }
+  .comment-submit:hover { opacity:.85; }
+  .detail-edit-btn {
+    display:flex; align-items:center; gap:4px;
+    background:none; border:1.5px solid #d3c3c5;
+    padding:6px 14px; border-radius:9999px;
+    font-family:'Nunito Sans',sans-serif; font-size:12px;
+    color:#78555e; cursor:pointer; transition:all .15s;
+  }
+  .detail-edit-btn:hover { border-color:#78555e; background:#fce4ec; }
+  @media (max-width:767px) {
+    .detail-wrap { padding:24px 16px 100px; }
+    .detail-paper { padding:32px 24px 28px; }
+    .comment-section { padding:18px 16px; }
+    .detail-photos img { width:90px; height:90px; }
+  }
+
+  /* ── 로그인 화면 ── */
+  .login-wrap {
+    min-height:100vh;
+    display:flex; flex-direction:column;
+    align-items:center; justify-content:center;
+    padding:40px 24px;
+  }
+  .login-box {
+    width:100%; max-width:400px;
+    background:#fff; border-radius:2px;
+    box-shadow:6px 6px 20px rgba(0,0,0,.1);
+    padding:44px 36px 40px;
+    position:relative;
+  }
+  .login-pin { position:absolute; top:-15px; left:50%; transform:translateX(-50%); width:22px; height:26px; }
+  .login-pin::before {
+    content:''; position:absolute; top:0; left:50%; transform:translateX(-50%);
+    width:15px; height:15px;
+    background:radial-gradient(circle at 35% 35%,#ff6b6b,#c0392b);
+    border-radius:50%;
+    box-shadow:0 2px 5px rgba(0,0,0,.35),inset 0 1px 2px rgba(255,255,255,.5);
+  }
+  .login-pin::after {
+    content:''; position:absolute; top:13px; left:50%; transform:translateX(-50%);
+    width:3px; height:13px;
+    background:linear-gradient(to bottom,#999,#bbb);
+    border-radius:0 0 2px 2px;
+  }
+  .login-title {
+    font-family:'Gaegu',cursive; font-size:26px; font-weight:700; color:#78555e;
+    text-align:center; margin-bottom:4px;
+  }
+  .login-sub {
+    font-family:'Nanum Myeongjo',serif; font-size:13px; color:#b0a0a4;
+    text-align:center; margin-bottom:28px;
+  }
+
+  /* 프로필 선택 그리드 */
+  .profile-grid {
+    display:grid; grid-template-columns:repeat(3,1fr);
+    gap:12px; margin-bottom:28px;
+  }
+  .profile-card {
+    display:flex; flex-direction:column; align-items:center; gap:8px;
+    padding:14px 8px; border-radius:12px;
+    border:2px solid transparent; cursor:pointer;
+    background:#faf5f6; transition:all .15s;
+  }
+  .profile-card:hover { border-color:#d3c3c5; background:#fff; }
+  .profile-card.selected { border-color:#78555e; background:#fff; }
+  .profile-avatar-lg {
+    width:48px; height:48px; border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    font-family:'Gaegu',cursive; font-size:20px; font-weight:700;
+  }
+  .profile-name {
+    font-family:'Nanum Pen Script',cursive; font-size:17px; color:#4a3f3f;
+  }
+
+  /* 비밀번호 단계 */
+  .login-selected-profile {
+    display:flex; align-items:center; gap:12px;
+    margin-bottom:24px; padding:12px 16px;
+    background:#faf5f6; border-radius:10px;
+  }
+  .login-selected-avatar {
+    width:40px; height:40px; border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    font-family:'Gaegu',cursive; font-size:18px; font-weight:700;
+  }
+  .login-selected-name {
+    font-family:'Nanum Pen Script',cursive; font-size:20px; color:#4a3f3f;
+  }
+  .login-change-btn {
+    margin-left:auto; background:none; border:none;
+    font-family:'Nunito Sans',sans-serif; font-size:11px; font-weight:600;
+    color:#b0a0a4; cursor:pointer; padding:0; text-decoration:underline;
+  }
+  .login-change-btn:hover { color:#78555e; }
+  .login-pw-label {
+    font-family:'Nunito Sans',sans-serif; font-size:11px; font-weight:700;
+    color:#9e9e9e; letter-spacing:.06em; display:block; margin-bottom:8px;
+  }
+  .login-input {
+    width:100%; box-sizing:border-box;
+    border:none; border-bottom:1.5px solid #d3c3c5;
+    background:transparent; outline:none;
+    font-family:'Nanum Pen Script',cursive; font-size:26px;
+    color:#4a3f3f; padding:4px 0 8px; letter-spacing:.3em;
+    transition:border-color .15s; text-align:center;
+  }
+  .login-input:focus { border-bottom-color:#78555e; }
+  .login-input::placeholder { color:#ddd; letter-spacing:.1em; font-size:20px; }
+  .login-btn {
+    width:100%; margin-top:28px;
+    background:#78555e; color:#fff; border:none;
+    padding:14px; cursor:pointer;
+    font-family:'Nanum Pen Script',cursive; font-size:22px;
+    border-radius:255px 15px 225px 15px/15px 225px 15px 255px;
+    box-shadow:4px 4px 0 #5e3e47;
+    transition:transform .15s,box-shadow .15s;
+  }
+  .login-btn:hover { transform:translate(-2px,-2px); box-shadow:6px 6px 0 #5e3e47; }
+  .login-btn:active { transform:translate(0,0); box-shadow:2px 2px 0 #5e3e47; }
+  .login-error {
+    font-family:'Nunito Sans',sans-serif; font-size:12px;
+    color:#e57373; text-align:center; margin-top:10px; min-height:18px;
+  }
+
+  /* 탑바 설정 버튼 */
+  .logout-btn {
+    background:none; border:1.5px solid #d3c3c5;
+    color:#9e9e9e; font-family:'Nunito Sans',sans-serif; font-size:11px; font-weight:600;
+    padding:4px 12px; border-radius:9999px; cursor:pointer;
+    transition:all .15s; display:flex; align-items:center; gap:4px;
+  }
+  .logout-btn:hover { border-color:#78555e; color:#78555e; }
+
+  /* ── 설정 화면 ── */
+  .settings-wrap { max-width:480px; margin:0 auto; padding:40px 40px 120px; }
+  .settings-section {
+    background:#fff; border-radius:12px;
+    border:1px solid #ede4e6; margin-bottom:16px; overflow:hidden;
+  }
+  .settings-section-title {
+    font-family:'Nunito Sans',sans-serif; font-size:11px; font-weight:700;
+    color:#b0a0a4; letter-spacing:.06em;
+    padding:14px 20px 10px; border-bottom:1px dashed #ede4e6;
+  }
+  .settings-row {
+    display:flex; align-items:center; justify-content:space-between;
+    padding:16px 20px; border-bottom:1px solid #f5eeef;
+    gap:12px;
+  }
+  .settings-row:last-child { border-bottom:none; }
+  .settings-row-label {
+    font-family:'Nunito Sans',sans-serif; font-size:13px;
+    font-weight:600; color:#4a3f3f; flex-shrink:0;
+  }
+  .settings-row-value {
+    font-family:'Nanum Pen Script',cursive; font-size:18px;
+    color:#9e9e9e; text-align:right; overflow:hidden; text-overflow:ellipsis;
+  }
+  .settings-edit-btn {
+    background:none; border:1.5px solid #d3c3c5;
+    color:#78555e; font-family:'Nunito Sans',sans-serif;
+    font-size:11px; font-weight:700;
+    padding:4px 12px; border-radius:9999px; cursor:pointer;
+    white-space:nowrap; transition:all .15s; flex-shrink:0;
+  }
+  .settings-edit-btn:hover { border-color:#78555e; background:#fce4ec; }
+
+  /* 인라인 수정 폼 */
+  .settings-edit-form {
+    padding:16px 20px; border-bottom:1px solid #f5eeef;
+    display:none;
+  }
+  .settings-edit-form.open { display:block; }
+  .settings-edit-form label {
+    font-family:'Nunito Sans',sans-serif; font-size:11px;
+    font-weight:700; color:#9e9e9e; display:block; margin-bottom:6px;
+    letter-spacing:.04em;
+  }
+  .settings-edit-input {
+    width:100%; box-sizing:border-box;
+    border:none; border-bottom:1.5px solid #d3c3c5;
+    background:transparent; outline:none;
+    font-family:'Nanum Pen Script',cursive; font-size:20px;
+    color:#4a3f3f; padding:4px 0 6px; margin-bottom:14px;
+    transition:border-color .15s;
+  }
+  .settings-edit-input:focus { border-bottom-color:#78555e; }
+  .settings-edit-input::placeholder { color:#ddd; }
+  .settings-edit-input[type=password] { letter-spacing:.15em; }
+  .settings-form-btns { display:flex; gap:8px; justify-content:flex-end; }
+  .settings-save-btn {
+    background:#78555e; color:#fff; border:none;
+    padding:8px 20px; border-radius:9999px;
+    font-family:'Nunito Sans',sans-serif; font-size:12px; font-weight:700;
+    cursor:pointer; transition:opacity .15s;
+  }
+  .settings-save-btn:hover { opacity:.85; }
+  .settings-cancel-btn {
+    background:none; border:1.5px solid #d3c3c5; color:#9e9e9e;
+    padding:8px 16px; border-radius:9999px;
+    font-family:'Nunito Sans',sans-serif; font-size:12px; font-weight:700;
+    cursor:pointer; transition:all .15s;
+  }
+  .settings-cancel-btn:hover { border-color:#999; }
+  .settings-msg {
+    font-family:'Nunito Sans',sans-serif; font-size:12px;
+    min-height:16px; margin-top:8px; text-align:right;
+  }
+  .settings-msg.ok  { color:#2e7d32; }
+  .settings-msg.err { color:#e57373; }
+
+  /* 위험 영역 */
+  .settings-danger-btn {
+    width:100%; background:none; border:none;
+    font-family:'Nunito Sans',sans-serif; font-size:13px; font-weight:700;
+    color:#e57373; padding:16px 20px; cursor:pointer; text-align:left;
+    display:flex; align-items:center; gap:6px; transition:background .15s;
+  }
+  .settings-danger-btn:hover { background:#fff5f5; }
+
+  /* 설정 아바타 */
+  .settings-avatar {
+    width:60px; height:60px; border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    font-family:'Gaegu',cursive; font-size:24px; font-weight:700;
+    background:#ffd1dc; color:#880e4f;
+    margin:0 auto 8px;
+  }
+  .settings-name-display {
+    font-family:'Gaegu',cursive; font-size:22px;
+    color:#78555e; text-align:center; margin-bottom:2px;
+  }
+  .settings-role-display {
+    font-family:'Nunito Sans',sans-serif; font-size:11px;
+    color:#b0a0a4; text-align:center; margin-bottom:20px;
+  }
+
+  @media (max-width:767px) {
+    .settings-wrap { padding:24px 16px 100px; }
+  }
+  .member-self-badge{font-size:10px;font-weight:700;background:#ffd1dc;color:#880e4f;padding:2px 10px;border-radius:9999px;white-space:nowrap;}
+  @keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════
+     화면 0 — 로그인
+══════════════════════════════ -->
+<div id="screen-login" class="screen active">
+  <div class="login-wrap">
+    <div class="login-box">
+      <div class="login-pin"></div>
+      <p class="login-title">&#127968; 우리가족 마음 저장소</p>
+      <p class="login-sub">누구로 들어갈까요?</p>
+
+      <div id="login-step1">
+        <div class="profile-grid">
+          <div class="profile-card" id="pc0">
+            <div class="profile-avatar-lg" style="background:#ffd1dc;color:#880e4f;">엄</div>
+            <span class="profile-name">엄마</span>
+          </div>
+          <div class="profile-card" id="pc1">
+            <div class="profile-avatar-lg" style="background:#bbdefb;color:#0d47a1;">아</div>
+            <span class="profile-name">아빠</span>
+          </div>
+          <div class="profile-card" id="pc2">
+            <div class="profile-avatar-lg" style="background:#c8e6c9;color:#1b5e20;">민</div>
+            <span class="profile-name">민수</span>
+          </div>
+          <div class="profile-card" id="pc3">
+            <div class="profile-avatar-lg" style="background:#e1bee7;color:#4a148c;">지</div>
+            <span class="profile-name">지혜</span>
+          </div>
+          <div class="profile-card" id="pc4">
+            <div class="profile-avatar-lg" style="background:#fff9c4;color:#e65100;">할</div>
+            <span class="profile-name">할머니</span>
+          </div>
+        </div>
+      </div>
+
+      <div id="login-step2" style="display:none;">
+        <div class="login-selected-profile">
+          <div class="login-selected-avatar" id="selected-avatar" style="width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:Gaegu,cursive;font-size:18px;font-weight:700;"></div>
+          <span class="login-selected-name" id="selected-name" style="font-family:'Nanum Pen Script',cursive;font-size:20px;color:#4a3f3f;"></span>
+          <button class="login-change-btn" id="btn-change">변경</button>
+        </div>
+        <label class="login-pw-label">비밀번호 (4자리)</label>
+        <input class="login-input" id="login-pw" type="password" placeholder="&#9679;&#9679;&#9679;&#9679;"
+          maxlength="4" inputmode="numeric" autocomplete="off">
+        <button class="login-btn" id="btn-enter">들어가기</button>
+        <p class="login-error" id="login-error"></p>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════
+     화면 1 — 게시판
+══════════════════════════════ -->
+<div id="screen-board" class="screen">
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="logo">🏠 우리가족 마음 저장소</div>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <span class="day-badge">함께한 지 1,234일째</span>
+        <button class="logout-btn" onclick="goSettings()" style="gap:4px;">
+          <span class="material-symbols-outlined" style="font-size:14px;">settings</span>
+          <span id="board-username"></span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main style="max-width:1200px;margin:0 auto;padding:48px 40px 140px;">
+    <div class="card-grid" id="board-grid">
+      <div id="board-loading" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(255,248,248,0.8);z-index:100;align-items:center;justify-content:center;flex-direction:column;gap:12px;">
+        <div style="width:40px;height:40px;border:3px solid #ffd1dc;border-top-color:#78555e;border-radius:50%;animation:spin 0.8s linear infinite;"></div>
+        <p style="font-family:'Gaegu',cursive;font-size:18px;color:#78555e;">편지를 불러오고 있어요...</p>
+      </div>
+    </div>
+  </main>
+
+  <!-- FAB -->
+  <button class="fab-write" onclick="goWrite()">
+    <span class="material-symbols-outlined" style="font-size:20px;">edit</span>편지 쓰기
+  </button>
+</div>
+
+
+<!-- ══════════════════════════════
+     화면 2 — 편지 작성
+══════════════════════════════ -->
+<div id="screen-write" class="screen">
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="logo" onclick="goBoard()">🏠 우리가족 마음 저장소</div>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <span class="day-badge">함께한 지 1,234일째</span>
+        <button class="logout-btn" onclick="goSettings()" style="gap:4px;">
+          <span class="material-symbols-outlined" style="font-size:14px;">settings</span>
+          <span id="write-username"></span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <div class="write-wrap">
+
+    <!-- 뒤로가기 -->
+    <button id="write-back-btn" onclick="goWriteBack()" style="display:flex;align-items:center;gap:4px;background:none;border:none;cursor:pointer;color:#9e9e9e;font-family:'Nunito Sans',sans-serif;font-size:13px;margin-bottom:28px;padding:0;">
+      <span class="material-symbols-outlined" style="font-size:18px;">arrow_back</span> <span id="write-back-label">게시판으로</span>
+    </button>
+
+    <!-- 편지지 색상 선택 -->
+    <div style="margin-bottom:16px;">
+      <p style="font-family:'Nunito Sans',sans-serif;font-size:11px;font-weight:600;color:#9e9e9e;margin-bottom:10px;letter-spacing:.04em;">편지지 색상</p>
+      <div class="color-swatches">
+        <div class="swatch active" data-bg="#fce4ec" style="background:#fce4ec;border-color:#78555e;" onclick="setColor(this,'#fce4ec')"></div>
+        <div class="swatch" data-bg="#e3f2fd" style="background:#e3f2fd;" onclick="setColor(this,'#e3f2fd')"></div>
+        <div class="swatch" data-bg="#fffde7" style="background:#fffde7;" onclick="setColor(this,'#fffde7')"></div>
+        <div class="swatch" data-bg="#e8f5e9" style="background:#e8f5e9;" onclick="setColor(this,'#e8f5e9')"></div>
+        <div class="swatch" data-bg="#f3e5f5" style="background:#f3e5f5;" onclick="setColor(this,'#f3e5f5')"></div>
+      </div>
+    </div>
+
+    <!-- 글씨체 선택 -->
+    <div style="margin-bottom:28px;">
+      <p style="font-family:'Nunito Sans',sans-serif;font-size:11px;font-weight:600;color:#9e9e9e;margin-bottom:10px;letter-spacing:.04em;">글씨체</p>
+      <div class="font-btns">
+        <button class="font-btn active" data-font="'Nanum Pen Script',cursive" onclick="setFont(this,'\'Nanum Pen Script\',cursive')">나눔 펜</button>
+        <button class="font-btn" data-font="'Nanum Myeongjo',serif" onclick="setFont(this,'\'Nanum Myeongjo\',serif')">나눔 명조</button>
+        <button class="font-btn" data-font="'Gaegu',cursive" onclick="setFont(this,'\'Gaegu\',cursive')">개구</button>
+      </div>
+    </div>
+
+    <!-- 편지지 본체 -->
+    <div class="write-paper" id="write-paper" style="background:#fce4ec;">
+      <div class="red-pin"></div>
+
+      <!-- 날짜 자동 -->
+      <p class="auto-date" id="auto-date"></p>
+
+      <!-- To -->
+      <div class="field-row">
+        <span class="field-label">To.</span>
+        <input class="field-input" id="field-to" placeholder="받는 사람" style="font-family:'Nanum Pen Script',cursive;"/>
+      </div>
+
+      <!-- From -->
+      <div class="field-row" style="margin-bottom:28px;">
+        <span class="field-label">From.</span>
+        <input class="field-input" id="field-from" placeholder="보내는 사람" style="font-family:'Nanum Pen Script',cursive;"/>
+      </div>
+
+      <!-- 내용 -->
+      <textarea class="content-area" id="field-content" placeholder="마음을 담아 편지를 써보세요..." style="font-family:'Nanum Pen Script',cursive;"></textarea>
+
+      <!-- 사진 첨부 -->
+      <div style="margin-bottom:8px;">
+        <p style="font-family:'Nunito Sans',sans-serif;font-size:11px;font-weight:600;color:#9e9e9e;margin-bottom:10px;letter-spacing:.04em;">사진 첨부 (최대 3장)</p>
+        <div class="photo-upload-area" id="photo-area">
+          <div class="photo-slot" onclick="triggerUpload(0)">
+            <span class="material-symbols-outlined" style="font-size:22px;">add_photo_alternate</span>
+            <span>사진 추가</span>
+          </div>
+          <div class="photo-slot" onclick="triggerUpload(1)">
+            <span class="material-symbols-outlined" style="font-size:22px;">add_photo_alternate</span>
+            <span>사진 추가</span>
+          </div>
+          <div class="photo-slot" onclick="triggerUpload(2)">
+            <span class="material-symbols-outlined" style="font-size:22px;">add_photo_alternate</span>
+            <span>사진 추가</span>
+          </div>
+          <input type="file" id="file-input" accept="image/*" style="display:none;" onchange="handlePhoto(event)"/>
+        </div>
+      </div>
+    </div>
+
+    <!-- 버튼 -->
+    <div class="btn-row" style="margin-top:28px;">
+      <button class="btn-cancel" id="btn-cancel-write" onclick="goWriteBack()">취소</button>
+      <button class="btn-send" id="btn-send-write" onclick="submitLetter()">
+        <span class="material-symbols-outlined" style="font-size:18px;vertical-align:-3px;">send</span> <span id="btn-send-label">편지 보내기</span>
+      </button>
+    </div>
+
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
+import { getFirestore, collection, doc, addDoc, getDoc, getDocs, updateDoc, deleteDoc, query, orderBy, serverTimestamp, setDoc } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
+import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-storage.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDfNLKScFwyP5DLUGMb6m6zfakOGmTHGaQ",
+  authDomain: "our-family-storage.firebaseapp.com",
+  projectId: "our-family-storage",
+  storageBucket: "our-family-storage.firebasestorage.app",
+  messagingSenderId: "990680934476",
+  appId: "1:990680934476:web:8cb7ebab0075d3f8fcece9"
+};
+
+const app     = initializeApp(firebaseConfig);
+const db      = getFirestore(app);
+const storage = getStorage(app);
+
+const AVATAR_COLORS = {
+  '\uC5C4\uB9C8':       { bg:'#ffd1dc', color:'#880e4f' },
+  '\uC544\uBE60':       { bg:'#bbdefb', color:'#0d47a1' },
+  '\uBBFC\uC218':       { bg:'#c8e6c9', color:'#1b5e20' },
+  '\uC9C0\uD598':       { bg:'#e1bee7', color:'#4a148c' },
+  '\uD560\uBA38\uB2C8': { bg:'#fff9c4', color:'#e65100' },
+};
+
+const BG_TO_CLASS = {
+  '#fce4ec':'card-pink','#e3f2fd':'card-blue',
+  '#fffde7':'card-yellow','#e8f5e9':'card-mint','#f3e5f5':'card-lavender'
+};
+
+const MEMBER_NAMES = ['\uC5C4\uB9C8','\uC544\uBE60','\uBBFC\uC218','\uC9C0\uD598','\uD560\uBA38\uB2C8'];
+
+let currentUser = '';
+let currentLetterId = null;
+let lettersCache = [];
+let pendingPhotoFiles = [null,null,null];
+let currentBg   = '#fce4ec';
+let currentFont = "'Nanum Pen Script',cursive";
+let isEditMode  = false;
+let prevScreen  = 'screen-board';
+let selectedLoginUser = '';
+let uploadSlot  = 0;
+
+// ── 멤버 초기화
+async function initMembers() {
+  for (const name of MEMBER_NAMES) {
+    const r = doc(db, 'members', name);
+    const s = await getDoc(r);
+    if (!s.exists()) await setDoc(r, { pw: '1234' });
+  }
+}
+async function getMemberPw(name) {
+  const s = await getDoc(doc(db, 'members', name));
+  return s.exists() ? s.data().pw : null;
+}
+async function getAllMembers() {
+  const s = await getDocs(collection(db, 'members'));
+  const r = {}; s.forEach(d => { r[d.id] = d.data().pw; }); return r;
+}
+
+// ── 게시판
+async function loadBoard() {
+  showLoading(true);
+  try {
+    const q = query(collection(db, 'letters'), orderBy('createdAt', 'desc'));
+    const snap = await getDocs(q);
+    lettersCache = [];
+    snap.forEach(d => lettersCache.push({ id: d.id, data: d.data() }));
+    renderBoard();
+  } catch(e) { console.error(e); }
+  showLoading(false);
+}
+
+function renderBoard() {
+  const grid = document.getElementById('board-grid');
+  const rotations = [-0.8, 0.5, -0.3, 1.2, -1, 0.8];
+  let html = '';
+  lettersCache.forEach((item, idx) => {
+    const l = item.data;
+    const cardClass = BG_TO_CLASS[l.bg] || 'card-pink';
+    const photoHtml = l.photos && l.photos.length > 0
+      ? '<img src="' + l.photos[0] + '" style="width:96px;height:96px;object-fit:cover;border-radius:3px;flex-shrink:0;">'
+      : '<div style="width:96px;height:96px;border-radius:3px;flex-shrink:0;background:#f4ecec;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;"><span class="material-symbols-outlined" style="color:#c8b8ba;font-size:28px;">photo_camera</span><span style="font-size:10px;color:#c8b8ba;">\uC0AC\uC9C4 \uC5C6\uC74C</span></div>';
+
+    html += '<article class="letter-card ' + cardClass + '" style="transform:rotate(' + rotations[idx % 6] + 'deg)" data-lid="' + item.id + '">'
+      + '<div class="red-pin"></div>'
+      + '<div style="display:flex;gap:12px;padding-top:6px;flex:1;min-height:0;">'
+      + photoHtml
+      + '<div style="flex:1;min-width:0;display:flex;flex-direction:column;">'
+      + '<p class="letter-to" style="font-family:\'Nanum Pen Script\',cursive;font-size:20px;line-height:1.3;margin-bottom:6px;">To. ' + l.to + '</p>'
+      + '<p style="font-family:\'Nanum Myeongjo\',serif;font-size:13px;line-height:1.6;color:#4a3f3f;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;margin-bottom:8px;flex:1;">' + (l.body || '').split('\n')[0] + '</p>'
+      + '<p class="letter-to" style="font-family:\'Nanum Pen Script\',cursive;font-size:15px;line-height:1.3;margin-bottom:8px;opacity:0.75;">From. ' + l.from + '</p>'
+      + '<div style="display:flex;justify-content:space-between;align-items:center;">'
+      + '<span class="letter-date">' + l.date + '</span>'
+      + '<span class="comment-count" style="font-family:\'Nunito Sans\',sans-serif;font-size:12px;font-weight:700;display:flex;align-items:center;gap:3px;"><span class="material-symbols-outlined" style="font-size:15px;">chat_bubble</span>\uB313\uAE00 ' + (l.commentCount || 0) + '</span>'
+      + '</div></div></div></article>';
+  });
+  html += '<div id="new-card-btn" class="new-card"><span class="material-symbols-outlined" style="font-size:36px;">add_circle</span><p style="font-family:\'Nanum Pen Script\',cursive;font-size:20px;text-align:center;">\uC0C8\uB85C\uC6B4 \uB9C8\uC74C\uC744 \uB0A8\uACA8\uBCF4\uC138\uC694</p></div>';
+  grid.innerHTML = html;
+  grid.querySelectorAll('.letter-card').forEach(c => c.addEventListener('click', () => goDetail(c.dataset.lid)));
+  const nb = document.getElementById('new-card-btn');
+  if (nb) nb.addEventListener('click', goWrite);
+}
+
+function showLoading(show) {
+  const el = document.getElementById('board-loading');
+  if (el) el.style.display = show ? 'flex' : 'none';
+}
+
+// ── 편지 상세
+async function goDetail(lid) {
+  currentLetterId = lid;
+  const snap = await getDoc(doc(db, 'letters', lid));
+  if (!snap.exists()) return;
+  const l = snap.data();
+
+  document.getElementById('detail-paper').style.background = l.bg || '#fce4ec';
+  document.getElementById('detail-date').textContent = l.date + ' \uC791\uC131' + (l.editedDate ? '  \xB7  ' + l.editedDate + ' \uC218\uC815' : '');
+  const tc = l.textColor || '#880e4f';
+  document.getElementById('detail-to').style.color = tc;
+  document.getElementById('detail-to').textContent = 'To. ' + l.to;
+  document.getElementById('detail-body').style.fontFamily = l.font || "'Nanum Pen Script',cursive";
+  document.getElementById('detail-body').style.color = '#4a3f3f';
+  document.getElementById('detail-body').textContent = l.body;
+  document.getElementById('detail-from').style.color = tc;
+  document.getElementById('detail-from').style.fontFamily = l.font || "'Nanum Pen Script',cursive";
+  document.getElementById('detail-from').textContent = 'From. ' + l.from;
+  document.getElementById('detail-photos').innerHTML = (l.photos || []).map(src => '<img src="' + src + '" alt="">').join('');
+
+  await loadComments(lid);
+
+  const eb = document.getElementById('detail-edit-btn');
+  eb.style.display = currentUser === l.from ? 'flex' : 'none';
+  eb.onclick = () => goEdit(l);
+
+  ['screen-board','screen-write','screen-settings'].forEach(id => document.getElementById(id).classList.remove('active'));
+  document.getElementById('screen-detail').classList.add('active');
+  window.scrollTo(0,0);
+}
+
+async function loadComments(lid) {
+  const q = query(collection(db, 'letters', lid, 'comments'), orderBy('createdAt', 'asc'));
+  const snap = await getDocs(q);
+  const comments = [];
+  snap.forEach(d => comments.push(d.data()));
+  renderComments(comments);
+}
+
+function renderComments(comments) {
+  const list = document.getElementById('detail-comment-list');
+  list.innerHTML = comments.map(c => {
+    const ac = AVATAR_COLORS[c.name] || { bg:'#ffd1dc', color:'#880e4f' };
+    return '<div class="comment-item"><div class="comment-avatar" style="background:' + ac.bg + ';color:' + ac.color + ';">' + (c.name||'?')[0] + '</div>'
+      + '<div class="comment-bubble"><p class="comment-name">' + c.name + '</p><p class="comment-text">' + c.text + '</p><p class="comment-time">' + c.time + '</p></div></div>';
+  }).join('');
+  document.getElementById('detail-comment-count').textContent = comments.length;
+}
+
+async function submitComment() {
+  const input = document.getElementById('detail-comment-input');
+  const val = input.value.trim();
+  if (!val || !currentLetterId) return;
+  const now = new Date();
+  const t = now.getFullYear() + '.' + String(now.getMonth()+1).padStart(2,'0') + '.' + String(now.getDate()).padStart(2,'0');
+  await addDoc(collection(db,'letters',currentLetterId,'comments'), { name:currentUser, text:val, time:t, createdAt:serverTimestamp() });
+  const lr = doc(db,'letters',currentLetterId);
+  const ls = await getDoc(lr);
+  if (ls.exists()) await updateDoc(lr, { commentCount:(ls.data().commentCount||0)+1 });
+  input.value = '';
+  await loadComments(currentLetterId);
+  // 게시판 캐시 업데이트
+  const ci = lettersCache.findIndex(x => x.id === currentLetterId);
+  if (ci >= 0) lettersCache[ci].data.commentCount = (lettersCache[ci].data.commentCount||0)+1;
+}
+
+// ── 편지 작성/수정
+function goWrite() {
+  isEditMode = false; currentBg = '#fce4ec'; currentFont = "'Nanum Pen Script',cursive";
+  pendingPhotoFiles = [null,null,null];
+  document.getElementById('write-back-label').textContent = '\uAC8C\uC2DC\uD310\uC73C\uB85C';
+  document.getElementById('btn-send-label').textContent = '\uD3B8\uC9C0 \uBCF4\uB0B4\uAE30';
+  document.getElementById('field-from').readOnly = false;
+  document.getElementById('field-from').style.opacity = '1';
+  document.getElementById('field-from').value = currentUser;
+  document.getElementById('field-to').value = '';
+  document.getElementById('field-content').value = '';
+  document.getElementById('write-paper').style.background = currentBg;
+  applySwatch(currentBg); applyFont(currentFont);
+  resetPhotoSlots(); setAutoDate();
+  ['screen-board','screen-detail','screen-settings'].forEach(id => document.getElementById(id).classList.remove('active'));
+  document.getElementById('screen-write').classList.add('active');
+  window.scrollTo(0,0);
+}
+
+function goEdit(l) {
+  isEditMode = true; currentBg = l.bg||'#fce4ec'; currentFont = l.font||"'Nanum Pen Script',cursive";
+  pendingPhotoFiles = [null,null,null];
+  document.getElementById('write-back-label').textContent = '\uD3B8\uC9C0\uB85C \uB3CC\uC544\uAC00\uAE30';
+  document.getElementById('btn-send-label').textContent = '\uC218\uC815 \uC644\uB8CC';
+  document.getElementById('field-to').value = l.to;
+  document.getElementById('field-from').value = l.from;
+  document.getElementById('field-from').readOnly = true;
+  document.getElementById('field-from').style.opacity = '0.5';
+  document.getElementById('field-content').value = l.body;
+  document.getElementById('write-paper').style.background = currentBg;
+  applySwatch(currentBg); applyFont(currentFont);
+  const slots = document.querySelectorAll('.photo-slot');
+  (l.photos||[]).forEach((src,i) => { if(slots[i]){slots[i].innerHTML='<img src="'+src+'" style="width:100%;height:100%;object-fit:cover;border-radius:4px;">';slots[i].style.border='none';slots[i].onclick=null;} });
+  for(let i=(l.photos||[]).length;i<3;i++){if(slots[i])resetSlot(slots[i],i);}
+  setAutoDate();
+  document.getElementById('screen-detail').classList.remove('active');
+  document.getElementById('screen-write').classList.add('active');
+  window.scrollTo(0,0);
+}
+
+function applySwatch(bg) {
+  document.querySelectorAll('.swatch').forEach(s=>{s.classList.remove('active');s.style.borderColor='transparent';if(s.dataset.bg===bg){s.classList.add('active');s.style.borderColor='#78555e';}});
+}
+function applyFont(font) {
+  document.querySelectorAll('.font-btn').forEach(b=>{b.classList.remove('active');if(b.dataset.font===font)b.classList.add('active');});
+  ['field-to','field-from','field-content'].forEach(id=>{document.getElementById(id).style.fontFamily=font;});
+}
+
+function resetPhotoSlots() { document.querySelectorAll('.photo-slot').forEach((s,i)=>resetSlot(s,i)); }
+function resetSlot(slot,i) {
+  slot.innerHTML='<span class="material-symbols-outlined" style="font-size:22px;">add_photo_alternate</span><span>\uC0AC\uC9C4 \uCD94\uAC00</span>';
+  slot.style.border='1.5px dashed #c8b8ba'; slot.onclick=()=>triggerUpload(i);
+}
+function triggerUpload(slot) { uploadSlot=slot; document.getElementById('file-input').click(); }
+function handlePhoto(e) {
+  const file=e.target.files[0]; if(!file) return;
+  pendingPhotoFiles[uploadSlot]=file;
+  const url=URL.createObjectURL(file);
+  const slots=document.querySelectorAll('.photo-slot');
+  slots[uploadSlot].innerHTML='<img src="'+url+'" style="width:100%;height:100%;object-fit:cover;border-radius:4px;">';
+  slots[uploadSlot].style.border='none'; slots[uploadSlot].onclick=null; e.target.value='';
+}
+async function uploadPhotos(lid) {
+  const urls=[];
+  for(let i=0;i<3;i++){
+    if(pendingPhotoFiles[i]){
+      const sr=ref(storage,'letters/'+lid+'/photo_'+i+'_'+Date.now());
+      await uploadBytes(sr,pendingPhotoFiles[i]);
+      urls.push(await getDownloadURL(sr));
+    }
+  }
+  return urls;
+}
+
+async function submitLetter() {
+  const to=document.getElementById('field-to').value.trim();
+  const from=document.getElementById('field-from').value.trim();
+  const body=document.getElementById('field-content').value.trim();
+  if(!to||!from||!body){alert('\uD3B8\uC9C0 \uB0B4\uC6A9\uC744 \uBAA8\uB450 \uC791\uC131\uD574\uC8FC\uC138\uC694!');return;}
+  const now=new Date();
+  const dateStr=now.getFullYear()+'.'+String(now.getMonth()+1).padStart(2,'0')+'.'+String(now.getDate()).padStart(2,'0');
+  const ac=AVATAR_COLORS[from]||{bg:'#fce4ec',color:'#880e4f'};
+  const btn=document.getElementById('btn-send-write');
+  btn.disabled=true; btn.style.opacity='0.6';
+  try{
+    if(isEditMode&&currentLetterId){
+      const newPhotos=await uploadPhotos(currentLetterId);
+      const ls=await getDoc(doc(db,'letters',currentLetterId));
+      const oldPhotos=ls.exists()?(ls.data().photos||[]):[];
+      const merged=newPhotos.length>0?[...oldPhotos,...newPhotos].slice(0,3):oldPhotos;
+      await updateDoc(doc(db,'letters',currentLetterId),{to,body,bg:currentBg,font:currentFont,textColor:ac.color,photos:merged,editedDate:dateStr});
+      await loadBoard(); goDetail(currentLetterId);
+    }else{
+      const newRef=doc(collection(db,'letters'));
+      const photos=await uploadPhotos(newRef.id);
+      await setDoc(newRef,{to,from,body,bg:currentBg,font:currentFont,textColor:ac.color,date:dateStr,photos,commentCount:0,createdAt:serverTimestamp()});
+      await loadBoard();
+      alert('\uD3B8\uC9C0\uAC00 \uC804\uB2EC\uB418\uC5C8\uC5B4\uC694 \uD83D\uDC8C');
+      goBoard();
+    }
+  }catch(e){console.error(e);alert('\uC800\uC7A5 \uC911 \uC624\uB958\uAC00 \uBC1C\uC0DD\uD588\uC5B4\uC694.');}
+  finally{btn.disabled=false;btn.style.opacity='1';}
+}
+
+function goWriteBack() { if(isEditMode)goDetail(currentLetterId); else goBoard(); }
+
+// ── 화면 전환
+function goBoard() {
+  ['screen-write','screen-detail','screen-settings'].forEach(id=>document.getElementById(id).classList.remove('active'));
+  document.getElementById('screen-board').classList.add('active');
+  window.scrollTo(0,0);
+}
+function goBack() {
+  document.getElementById('screen-settings').classList.remove('active');
+  document.getElementById(prevScreen).classList.add('active');
+  window.scrollTo(0,0);
+}
+function setAutoDate() {
+  const d=new Date();
+  document.getElementById('auto-date').textContent=d.getFullYear()+'.'+String(d.getMonth()+1).padStart(2,'0')+'.'+String(d.getDate()).padStart(2,'0')+' \uC791\uC131';
+}
+
+// ── 로그인
+async function tryLogin() {
+  const name=selectedLoginUser;
+  const pw=document.getElementById('login-pw').value.trim();
+  const errEl=document.getElementById('login-error');
+  if(!name){errEl.textContent='\uD504\uB85C\uD544\uC744 \uC120\uD0DD\uD574 \uC8FC\uC138\uC694.';return;}
+  if(!pw){errEl.textContent='\uBE44\uBC00\uBC88\uD638\uB97C \uC785\uB825\uD574 \uC8FC\uC138\uC694.';return;}
+  const savedPw=await getMemberPw(name);
+  if(savedPw===null){errEl.textContent='\uB4F1\uB85D\uB41C \uBA64\uBC84\uAC00 \uC544\uB2C8\uC5D0\uC694.';return;}
+  if(savedPw!==pw){errEl.textContent='\uBE44\uBC00\uBC88\uD638\uAC00 \uD2C0\uB838\uC5B4\uC694.';document.getElementById('login-pw').value='';return;}
+  currentUser=name;
+  ['board-username','write-username','detail-username'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=name;});
+  document.getElementById('screen-login').classList.remove('active');
+  document.getElementById('screen-board').classList.add('active');
+  await loadBoard();
+  window.scrollTo(0,0);
+}
+
+function doLogout() {
+  currentUser=''; selectedLoginUser='';
+  document.getElementById('login-pw').value='';
+  document.getElementById('login-error').textContent='';
+  document.getElementById('login-step1').style.display='block';
+  document.getElementById('login-step2').style.display='none';
+  ['screen-board','screen-write','screen-detail','screen-settings'].forEach(id=>document.getElementById(id).classList.remove('active'));
+  document.getElementById('screen-login').classList.add('active');
+  bindLoginEvents();
+  window.scrollTo(0,0);
+}
+
+// ── 설정
+async function goSettings() {
+  ['screen-board','screen-write','screen-detail'].forEach(id=>{
+    if(document.getElementById(id).classList.contains('active'))prevScreen=id;
+    document.getElementById(id).classList.remove('active');
+  });
+  const ac=AVATAR_COLORS[currentUser]||{bg:'#f4ecec',color:'#78555e'};
+  const av=document.getElementById('settings-avatar');
+  av.textContent=currentUser[0]||'?'; av.style.background=ac.bg; av.style.color=ac.color;
+  document.getElementById('settings-name-display').textContent=currentUser;
+  document.getElementById('nickname-display').textContent=currentUser;
+  ['new-nickname','cur-pw','new-pw','new-pw2'].forEach(id=>document.getElementById(id).value='');
+  ['nickname-msg','password-msg'].forEach(id=>document.getElementById(id).textContent='');
+  ['nickname-form','password-form'].forEach(id=>document.getElementById(id).classList.remove('open'));
+  await renderMembersList();
+  document.getElementById('screen-settings').classList.add('active');
+  window.scrollTo(0,0);
+}
+
+async function renderMembersList() {
+  const el=document.getElementById('members-list');
+  let html='';
+  for(const name of MEMBER_NAMES){
+    const ac=AVATAR_COLORS[name]||{bg:'#f4ecec',color:'#78555e'};
+    const badge=(name===currentUser)?'<span class="member-self-badge">\uB098</span>':'';
+    html+='<div class="settings-row"><div style="display:flex;align-items:center;gap:10px;flex:1;">'
+      +'<div style="width:32px;height:32px;border-radius:50%;background:'+ac.bg+';color:'+ac.color+';display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;flex-shrink:0;">'+name[0]+'</div>'
+      +'<span style="font-size:16px;color:#4a3f3f;">'+name+'</span></div>'+badge+'</div>';
+  }
+  el.innerHTML=html;
+}
+
+async function saveNickname() {
+  const newName=document.getElementById('new-nickname').value.trim();
+  const msgEl=document.getElementById('nickname-msg');
+  if(!newName){msgEl.className='settings-msg err';msgEl.textContent='\uC774\uB984\uC744 \uC785\uB825\uD574 \uC8FC\uC138\uC694.';return;}
+  if(newName===currentUser){msgEl.className='settings-msg err';msgEl.textContent='\uD604\uC7AC \uB2C9\uB124\uC784\uACFC \uAC19\uC544\uC694.';return;}
+  const existing=await getMemberPw(newName);
+  if(existing!==null){msgEl.className='settings-msg err';msgEl.textContent='\uC774\uBBF8 \uC0AC\uC6A9 \uC911\uC778 \uC774\uB984\uC774\uC5D0\uC694.';return;}
+  const oldPw=await getMemberPw(currentUser);
+  await setDoc(doc(db,'members',newName),{pw:oldPw});
+  await deleteDoc(doc(db,'members',currentUser));
+  currentUser=newName;
+  ['board-username','write-username','detail-username'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=newName;});
+  const ac=AVATAR_COLORS[newName]||{bg:'#f4ecec',color:'#78555e'};
+  const avEl=document.getElementById('settings-avatar');
+  avEl.textContent=newName[0];avEl.style.background=ac.bg;avEl.style.color=ac.color;
+  document.getElementById('settings-name-display').textContent=newName;
+  document.getElementById('nickname-display').textContent=newName;
+  msgEl.className='settings-msg ok';msgEl.textContent='\uB2C9\uB124\uC784\uC774 \uBCC0\uACBD\uB418\uC5C8\uC5B4\uC694!';
+  document.getElementById('new-nickname').value='';
+  await renderMembersList();
+  setTimeout(()=>{document.getElementById('nickname-form').classList.remove('open');msgEl.textContent='';},1200);
+}
+
+async function savePassword() {
+  const curPw=document.getElementById('cur-pw').value.trim();
+  const newPw=document.getElementById('new-pw').value.trim();
+  const newPw2=document.getElementById('new-pw2').value.trim();
+  const msgEl=document.getElementById('password-msg');
+  if(!curPw||!newPw||!newPw2){msgEl.className='settings-msg err';msgEl.textContent='\uBAA8\uB4E0 \uCE78\uC744 \uCC44\uC6CC \uC8FC\uC138\uC694.';return;}
+  const savedPw=await getMemberPw(currentUser);
+  if(savedPw!==curPw){msgEl.className='settings-msg err';msgEl.textContent='\uD604\uC7AC \uBE44\uBC00\uBC88\uD638\uAC00 \uD2C0\uB838\uC5B4\uC694.';return;}
+  if(newPw.length!==4){msgEl.className='settings-msg err';msgEl.textContent='\uC0C8 \uBE44\uBC00\uBC88\uD638\uB294 4\uC790\uB9AC\uC5EC\uC57C \uD574\uC694.';return;}
+  if(newPw!==newPw2){msgEl.className='settings-msg err';msgEl.textContent='\uC0C8 \uBE44\uBC00\uBC88\uD638\uAC00 \uC77C\uCE58\uD558\uC9C0 \uC54A\uC544\uC694.';return;}
+  if(newPw===curPw){msgEl.className='settings-msg err';msgEl.textContent='\uD604\uC7AC \uBE44\uBC00\uBC88\uD638\uC640 \uB2E4\uB974\uAC8C \uC124\uC815\uD574 \uC8FC\uC138\uC694.';return;}
+  await updateDoc(doc(db,'members',currentUser),{pw:newPw});
+  msgEl.className='settings-msg ok';msgEl.textContent='\uBE44\uBC00\uBC88\uD638\uAC00 \uBCC0\uACBD\uB418\uC5C8\uC5B4\uC694!';
+  ['cur-pw','new-pw','new-pw2'].forEach(id=>document.getElementById(id).value='');
+  setTimeout(()=>{document.getElementById('password-form').classList.remove('open');msgEl.textContent='';},1200);
+}
+
+function toggleForm(formId) {
+  const form=document.getElementById(formId);
+  const isOpen=form.classList.contains('open');
+  ['nickname-form','password-form'].forEach(id=>document.getElementById(id).classList.remove('open'));
+  if(!isOpen)form.classList.add('open');
+}
+
+// ── 스와치/폰트
+function setColor(el,bg) {
+  document.querySelectorAll('.swatch').forEach(s=>{s.classList.remove('active');s.style.borderColor='transparent';});
+  el.classList.add('active');el.style.borderColor='#78555e';
+  currentBg=bg; document.getElementById('write-paper').style.background=bg;
+}
+function setFont(el,font) {
+  document.querySelectorAll('.font-btn').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active'); currentFont=font;
+  ['field-to','field-from','field-content'].forEach(id=>{document.getElementById(id).style.fontFamily=font;});
+}
+
+// ── 로그인 이벤트
+function bindLoginEvents() {
+  var pd=[
+    {id:'pc0',bg:'#ffd1dc',color:'#880e4f',name:'\uC5C4\uB9C8'},
+    {id:'pc1',bg:'#bbdefb',color:'#0d47a1',name:'\uC544\uBE60'},
+    {id:'pc2',bg:'#c8e6c9',color:'#1b5e20',name:'\uBBFC\uC218'},
+    {id:'pc3',bg:'#e1bee7',color:'#4a148c',name:'\uC9C0\uD598'},
+    {id:'pc4',bg:'#fff9c4',color:'#e65100',name:'\uD560\uBA38\uB2C8'}
+  ];
+  pd.forEach(function(p){
+    var el=document.getElementById(p.id);
+    if(!el)return;
+    el.addEventListener('click',function(){
+      selectedLoginUser=p.name;
+      var av=document.getElementById('selected-avatar');
+      av.textContent=p.name[0];av.style.background=p.bg;av.style.color=p.color;
+      document.getElementById('selected-name').textContent=p.name;
+      document.getElementById('login-step1').style.display='none';
+      document.getElementById('login-step2').style.display='block';
+      document.getElementById('login-pw').value='';
+      document.getElementById('login-error').textContent='';
+      document.getElementById('login-pw').focus();
+    });
+  });
+  var cb=document.getElementById('btn-change');
+  if(cb)cb.addEventListener('click',function(){
+    selectedLoginUser='';
+    document.getElementById('login-step1').style.display='block';
+    document.getElementById('login-step2').style.display='none';
+    document.getElementById('login-pw').value='';
+    document.getElementById('login-error').textContent='';
+  });
+  var eb=document.getElementById('btn-enter');
+  if(eb)eb.addEventListener('click',tryLogin);
+  var pi=document.getElementById('login-pw');
+  if(pi)pi.addEventListener('keydown',function(e){if(e.key==='Enter')tryLogin();});
+}
+
+// ── 초기화
+async function init() {
+  await initMembers();
+  bindLoginEvents();
+  document.querySelector('.fab-write').addEventListener('click', goWrite);
+}
+
+if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',init);}else{init();}
+
+// 전역 노출
+window.goBoard=goBoard; window.goWrite=goWrite; window.goBack=goBack;
+window.goDetail=goDetail; window.goSettings=goSettings; window.doLogout=doLogout;
+window.submitLetter=submitLetter; window.submitComment=submitComment;
+window.saveNickname=saveNickname; window.savePassword=savePassword;
+window.toggleForm=toggleForm; window.setColor=setColor; window.setFont=setFont;
+window.triggerUpload=triggerUpload; window.handlePhoto=handlePhoto;
+window.goWriteBack=goWriteBack;
+
+</script>
+
+
+<!-- ══════════════════════════════
+     화면 3 — 편지 상세
+══════════════════════════════ -->
+<div id="screen-detail" class="screen">
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="logo" onclick="goBoard()">🏠 우리가족 마음 저장소</div>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <span class="day-badge">함께한 지 1,234일째</span>
+        <button class="logout-btn" onclick="goSettings()" style="gap:4px;">
+          <span class="material-symbols-outlined" style="font-size:14px;">settings</span>
+          <span id="detail-username"></span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <div class="detail-wrap">
+
+    <!-- 뒤로 + 수정 버튼 -->
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:28px;">
+      <button onclick="goBoard()" style="display:flex;align-items:center;gap:4px;background:none;border:none;cursor:pointer;color:#9e9e9e;font-family:'Nunito Sans',sans-serif;font-size:13px;padding:0;">
+        <span class="material-symbols-outlined" style="font-size:18px;">arrow_back</span> 게시판으로
+      </button>
+      <button class="detail-edit-btn" id="detail-edit-btn" style="display:none;" onclick="goEdit()">
+        <span class="material-symbols-outlined" style="font-size:15px;">edit</span> 수정
+      </button>
+    </div>
+
+    <!-- 편지지 본체 -->
+    <div class="detail-paper" id="detail-paper">
+      <div class="red-pin"></div>
+      <div class="detail-header-meta">
+        <span id="detail-date"></span>
+      </div>
+      <p class="detail-to" id="detail-to"></p>
+      <p class="detail-body" id="detail-body" style="font-family:'Nanum Pen Script',cursive;"></p>
+      <div class="detail-photos" id="detail-photos"></div>
+      <p class="detail-from" id="detail-from"></p>
+    </div>
+
+    <!-- 댓글 섹션 -->
+    <div class="comment-section">
+      <p class="comment-section-title">
+        <span class="material-symbols-outlined" style="font-size:17px;">chat_bubble</span>
+        댓글 <span id="detail-comment-count">0</span>개
+      </p>
+      <div class="comment-list" id="detail-comment-list"></div>
+      <div class="comment-input-row">
+        <input class="comment-input" id="detail-comment-input" placeholder="따뜻한 댓글을 남겨보세요..." onkeydown="if(event.key==='Enter') submitComment()">
+        <button class="comment-submit" onclick="submitComment()">남기기</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════
+     화면 4 — 설정
+══════════════════════════════ -->
+<div id="screen-settings" class="screen">
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="logo" onclick="goBoard()">🏠 우리가족 마음 저장소</div>
+      <span class="day-badge">함께한 지 1,234일째</span>
+    </div>
+  </header>
+
+  <div class="settings-wrap">
+
+    <!-- 뒤로 -->
+    <button onclick="goBack()" style="display:flex;align-items:center;gap:4px;background:none;border:none;cursor:pointer;color:#9e9e9e;font-family:'Nunito Sans',sans-serif;font-size:13px;margin-bottom:28px;padding:0;">
+      <span class="material-symbols-outlined" style="font-size:18px;">arrow_back</span> 돌아가기
+    </button>
+
+    <!-- 프로필 -->
+    <div style="text-align:center;margin-bottom:28px;">
+      <div class="settings-avatar" id="settings-avatar">나</div>
+      <p class="settings-name-display" id="settings-name-display">이름</p>
+      <p class="settings-role-display">우리가족 마음 저장소 멤버</p>
+    </div>
+
+    <!-- 닉네임 변경 -->
+    <div class="settings-section">
+      <p class="settings-section-title">계정 정보</p>
+
+      <div class="settings-row" id="nickname-row">
+        <span class="settings-row-label">닉네임</span>
+        <span class="settings-row-value" id="nickname-display"></span>
+        <button class="settings-edit-btn" onclick="toggleForm('nickname-form', 'nickname-row')">변경</button>
+      </div>
+      <div class="settings-edit-form" id="nickname-form">
+        <label>새 닉네임</label>
+        <input class="settings-edit-input" id="new-nickname" type="text" maxlength="6" placeholder="이름을 입력하세요" onkeydown="if(event.key==='Enter') saveNickname()">
+        <p class="settings-msg" id="nickname-msg"></p>
+        <div class="settings-form-btns">
+          <button class="settings-cancel-btn" onclick="toggleForm('nickname-form','nickname-row')">취소</button>
+          <button class="settings-save-btn" onclick="saveNickname()">저장</button>
+        </div>
+      </div>
+
+      <div class="settings-row" id="password-row">
+        <span class="settings-row-label">비밀번호</span>
+        <span class="settings-row-value">••••</span>
+        <button class="settings-edit-btn" onclick="toggleForm('password-form','password-row')">변경</button>
+      </div>
+      <div class="settings-edit-form" id="password-form">
+        <label>현재 비밀번호</label>
+        <input class="settings-edit-input" id="cur-pw" type="password" maxlength="4" inputmode="numeric" placeholder="••••" onkeydown="if(event.key==='Enter')document.getElementById('new-pw').focus()">
+        <label>새 비밀번호 (4자리)</label>
+        <input class="settings-edit-input" id="new-pw" type="password" maxlength="4" inputmode="numeric" placeholder="••••" onkeydown="if(event.key==='Enter')document.getElementById('new-pw2').focus()">
+        <label>새 비밀번호 확인</label>
+        <input class="settings-edit-input" id="new-pw2" type="password" maxlength="4" inputmode="numeric" placeholder="••••" onkeydown="if(event.key==='Enter') savePassword()">
+        <p class="settings-msg" id="password-msg"></p>
+        <div class="settings-form-btns">
+          <button class="settings-cancel-btn" onclick="toggleForm('password-form','password-row')">취소</button>
+          <button class="settings-save-btn" onclick="savePassword()">저장</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 우리 가족 -->
+    <div class="settings-section">
+      <p class="settings-section-title">우리 가족 멤버</p>
+      <div id="members-list"></div>
+    </div>
+
+    <!-- 로그아웃 -->
+    <div class="settings-section">
+      <button class="settings-danger-btn" onclick="doLogout()">
+        <span class="material-symbols-outlined" style="font-size:16px;">logout</span>
+        로그아웃
+      </button>
+    </div>
+
+  </div>
+</div>
+
+</body>
+</html>
