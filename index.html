@@ -775,10 +775,11 @@ let uploadSlot  = 0;
 
 // ── 멤버 초기화
 async function initMembers() {
+  // 이미 멤버가 있으면 스킵 (닉네임 변경 보존)
+  const snap = await getDocs(collection(db, 'members'));
+  if (!snap.empty) return;
   for (const name of MEMBER_NAMES) {
-    const r = doc(db, 'members', name);
-    const s = await getDoc(r);
-    if (!s.exists()) await setDoc(r, { pw: '1234' });
+    await setDoc(doc(db, 'members', name), { pw: '1234' });
   }
 }
 async function getMemberPw(name) {
@@ -1078,8 +1079,10 @@ async function goSettings() {
 
 async function renderMembersList() {
   const el=document.getElementById('members-list');
+  const members=await getAllMembers();
+  const names=Object.keys(members);
   let html='';
-  for(const name of MEMBER_NAMES){
+  for(const name of names){
     const ac=AVATAR_COLORS[name]||{bg:'#f4ecec',color:'#78555e'};
     const badge=(name===currentUser)?'<span class="member-self-badge">\uB098</span>':'';
     html+='<div class="settings-row"><div style="display:flex;align-items:center;gap:10px;flex:1;">'
