@@ -3,6 +3,16 @@
 <head>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>🏠 우리가족 마음 저장소</title>
+<meta property="og:title" content="🏠 우리가족 마음 저장소"/>
+<meta property="og:description" content="가족이 서로에게 편지를 쓰고 추억을 아카이빙하는 공간이에요 💌"/>
+<meta property="og:image" content="https://dokyeong-kim.github.io/family-letter-board/og-image.png"/>
+<meta property="og:url" content="https://dokyeong-kim.github.io/family-letter-board/"/>
+<meta property="og:type" content="website"/>
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:title" content="🏠 우리가족 마음 저장소"/>
+<meta name="twitter:description" content="가족이 서로에게 편지를 쓰고 추억을 아카이빙하는 공간이에요 💌"/>
+<meta name="twitter:image" content="https://dokyeong-kim.github.io/family-letter-board/og-image.png"/>
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 <link href="https://fonts.googleapis.com/css2?family=Gaegu:wght@300;400;700&family=Nanum+Pen+Script&family=Nanum+Myeongjo:wght@400;700&family=Nunito+Sans:wght@300;400;600;700&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
 <style>
@@ -858,7 +868,7 @@ async function goDetail(lid) {
   const l = snap.data();
 
   document.getElementById('detail-paper').style.background = l.bg || '#fce4ec';
-  document.getElementById('detail-date').textContent = l.date + ' \uC791\uC131' + (l.editedDate ? '  \xB7  ' + l.editedDate + ' \uC218\uC815' : '');
+  document.getElementById('detail-date').textContent = l.date + (l.editedDate ? '  \xB7  \uC218\uC815\uB428' : '');
   const tc = l.textColor || '#880e4f';
   document.getElementById('detail-to').style.color = tc;
   document.getElementById('detail-to').textContent = 'To. ' + l.to;
