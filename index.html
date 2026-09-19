@@ -569,7 +569,9 @@
   .logo { color:var(--pixel-navy); font-family:'Courier New',monospace; font-weight:900; text-shadow:2px 2px 0 #fff; }
   .day-badge { background:var(--pixel-yellow); color:var(--pixel-navy); border:2px solid var(--pixel-navy); border-radius:0; }
   .login-box,.write-paper,.detail-paper,.settings-wrap { background:#fff; border:4px solid var(--pixel-navy); box-shadow:8px 8px 0 #75bccc; border-radius:0; }
-  .login-title,.login-sub,.profile-name,.letter-to,.letter-date,.new-card p,.field-input,.content-area { font-family:'Courier New',monospace !important; }
+  .login-title,.login-sub,.profile-name,.letter-date,.new-card p { font-family:'Courier New',monospace; }
+  /* 작성 화면의 글꼴은 글씨체 버튼이 지정한 inline font-family가 우선되어야 합니다. */
+  .field-input,.content-area { font-family:'Courier New',monospace; }
   .login-title { color:var(--pixel-navy); font-weight:900; }
   .profile-card { border:3px solid var(--pixel-blue); border-radius:0; background:#f6ffff; box-shadow:3px 3px 0 #9bcbd4; }
   .profile-card:hover,.profile-card.selected { border-color:var(--pixel-navy); background:var(--pixel-yellow); transform:translate(-2px,-2px); }
