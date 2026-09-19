@@ -559,6 +559,31 @@
   }
   .member-self-badge{font-size:10px;font-weight:700;background:#ffd1dc;color:#880e4f;padding:2px 10px;border-radius:9999px;white-space:nowrap;}
   @keyframes spin{to{transform:rotate(360deg)}}
+  /* ── 2000년대 미니홈피 도트 테마 ── */
+  :root { --pixel-navy:#173b59; --pixel-blue:#4c9fc0; --pixel-cyan:#d9f5f4; --pixel-yellow:#fff1a8; --pixel-pink:#ffb4c8; --pixel-ink:#21405a; }
+  * { image-rendering: pixelated; }
+  body { background:#b9e5ed; color:var(--pixel-ink); font-family:'Courier New',monospace; background-image:linear-gradient(45deg,rgba(255,255,255,.25) 25%,transparent 25%,transparent 75%,rgba(255,255,255,.25) 75%),linear-gradient(45deg,rgba(255,255,255,.25) 25%,transparent 25%,transparent 75%,rgba(255,255,255,.25) 75%); background-size:8px 8px; background-position:0 0,4px 4px; }
+  .screen { max-width:1180px; margin:18px auto; min-height:calc(100vh - 36px); background:#eefdfc; border:6px solid var(--pixel-navy); box-shadow:10px 10px 0 rgba(23,59,89,.35); }
+  .topbar { background:var(--pixel-cyan); border-bottom:4px solid var(--pixel-navy); position:sticky; top:0; }
+  .topbar-inner { padding:12px 18px; }
+  .logo { color:var(--pixel-navy); font-family:'Courier New',monospace; font-weight:900; text-shadow:2px 2px 0 #fff; }
+  .day-badge { background:var(--pixel-yellow); color:var(--pixel-navy); border:2px solid var(--pixel-navy); border-radius:0; }
+  .login-box,.write-paper,.detail-paper,.settings-wrap { background:#fff; border:4px solid var(--pixel-navy); box-shadow:8px 8px 0 #75bccc; border-radius:0; }
+  .login-title,.login-sub,.profile-name,.letter-to,.letter-date,.new-card p,.field-input,.content-area { font-family:'Courier New',monospace !important; }
+  .login-title { color:var(--pixel-navy); font-weight:900; }
+  .profile-card { border:3px solid var(--pixel-blue); border-radius:0; background:#f6ffff; box-shadow:3px 3px 0 #9bcbd4; }
+  .profile-card:hover,.profile-card.selected { border-color:var(--pixel-navy); background:var(--pixel-yellow); transform:translate(-2px,-2px); }
+  .profile-avatar-lg,.login-selected-avatar,.settings-avatar { border:3px solid var(--pixel-navy); border-radius:0 !important; }
+  .login-input,.field-input,.content-area,.comment-input,.settings-edit-input { border:3px solid var(--pixel-blue); border-radius:0; background:#fbffff; font-family:'Courier New',monospace !important; }
+  .login-btn,.fab-write,.comment-submit,.settings-save-btn { background:var(--pixel-navy); color:#fff; border:3px solid #0b2236; border-radius:0; box-shadow:4px 4px 0 #70b6c7; font-family:'Courier New',monospace; font-weight:900; }
+  .login-btn:hover,.fab-write:hover,.comment-submit:hover { transform:translate(-2px,-2px); box-shadow:6px 6px 0 #70b6c7; }
+  .board-wrap { padding:28px; }
+  .letter-card { border:4px solid var(--pixel-navy); border-radius:0; box-shadow:6px 6px 0 #83c8d4; }
+  .card-pink { background:#ffd5df; }.card-blue { background:#c9e9ff; }.card-yellow { background:#fff3ad; }.card-mint { background:#d5f3df; }.card-lavender { background:#eadcff; }
+  .new-card { border:4px dashed var(--pixel-blue); border-radius:0; background:#efffff; }
+  .red-pin { filter:saturate(.8); }
+  .settings-row,.settings-section { border-color:var(--pixel-blue); border-radius:0; }
+  @media (max-width:767px) { .screen { margin:0; border-width:4px; box-shadow:none; } .board-wrap { padding:16px; } }
 </style>
 </head>
 <body>
@@ -752,6 +777,8 @@
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
 import { getFirestore, collection, doc, addDoc, getDoc, getDocs, updateDoc, deleteDoc, query, orderBy, serverTimestamp, setDoc } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
+import { getAuth, setPersistence, browserSessionPersistence, signInWithCustomToken, signOut } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js";
+import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-functions.js";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-storage.js";
 
 const firebaseConfig = {
@@ -766,6 +793,18 @@ const firebaseConfig = {
 const app     = initializeApp(firebaseConfig);
 const db      = getFirestore(app);
 const storage = getStorage(app);
+const auth = getAuth(app);
+const functions = getFunctions(app, 'asia-northeast3');
+const callServer = async (name, data = {}) => (await httpsCallable(functions, name)(data)).data;
+let loginProfiles = [];
+function escapeHtml(value) {
+  return String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function photoUrl(value) {
+  try { const url = new URL(value); return url.protocol === 'https:' ? escapeHtml(url.href) : ''; }
+  catch { return ''; }
+}
+
 
 const AVATAR_COLORS = {
   '\uC5C4\uB9C8':       { bg:'#ffd1dc', color:'#880e4f' },
@@ -793,22 +832,50 @@ let prevScreen  = 'screen-board';
 let selectedLoginUser = '';
 let uploadSlot  = 0;
 
-// ── 멤버 초기화
-async function initMembers() {
-  // 이미 멤버가 있으면 스킵 (닉네임 변경 보존)
-  const snap = await getDocs(collection(db, 'members'));
-  if (!snap.empty) return;
-  for (const name of MEMBER_NAMES) {
-    await setDoc(doc(db, 'members', name), { pw: '1234' });
-  }
-}
-async function getMemberPw(name) {
-  const s = await getDoc(doc(db, 'members', name));
-  return s.exists() ? s.data().pw : null;
+// ── 가족 프로필 (비밀번호는 서버에서만 확인)
+async function loadProfiles() {
+  const result = await callServer('familyProfiles');
+  loginProfiles = result.members;
+  const grid = document.querySelector('.profile-grid');
+  grid.replaceChildren();
+  const colors = ['#ffd1dc','#bbdefb','#c8e6c9','#e1bee7','#fff9c4'];
+  loginProfiles.forEach((member, index) => {
+    const card = document.createElement('button');
+    card.type = 'button'; card.className = 'profile-card';
+    card.style.background = 'transparent';
+    const avatar = document.createElement('div');
+    avatar.className = 'profile-avatar-lg'; avatar.textContent = member.name[0];
+    avatar.style.background = colors[index % colors.length];
+    const label = document.createElement('span');
+    label.className = 'profile-name'; label.textContent = member.name;
+    card.append(avatar, label);
+    card.addEventListener('click', () => {
+      selectedLoginUser = member.id;
+      const selected = document.getElementById('selected-avatar');
+      selected.textContent = member.name[0]; selected.style.background = avatar.style.background;
+      document.getElementById('selected-name').textContent = member.name;
+      document.getElementById('login-step1').style.display = 'none';
+      document.getElementById('login-step2').style.display = 'block';
+      document.getElementById('login-pw').value = '';
+      document.getElementById('login-error').textContent = '';
+      document.getElementById('login-pw').focus();
+    });
+    grid.append(card);
+  });
 }
 async function getAllMembers() {
-  const s = await getDocs(collection(db, 'members'));
-  const r = {}; s.forEach(d => { r[d.id] = d.data().pw; }); return r;
+  const snapshot = await getDocs(collection(db, 'members'));
+  return Object.fromEntries(snapshot.docs.filter(d => d.data().enabled).map(d => [d.data().name, true]));
+}
+async function enterBoard(name) {
+  currentUser = name;
+  ['board-username','write-username','detail-username'].forEach(id => {
+    const el=document.getElementById(id); if(el)el.textContent=name;
+  });
+  document.getElementById('screen-login').classList.remove('active');
+  document.getElementById('screen-board').classList.add('active');
+  document.getElementById('login-pw').value = '';
+  await loadBoard(); window.scrollTo(0,0);
 }
 
 // ── 게시판
@@ -832,7 +899,7 @@ function renderBoard() {
     const l = item.data;
     const cardClass = BG_TO_CLASS[l.bg] || 'card-pink';
     const photoHtml = l.photos && l.photos.length > 0
-      ? '<img src="' + l.photos[0] + '" style="width:96px;height:96px;object-fit:cover;border-radius:3px;flex-shrink:0;">'
+      ? '<img src="' + photoUrl(l.photos[0]) + '" style="width:96px;height:96px;object-fit:cover;border-radius:3px;flex-shrink:0;">'
       : '<div style="width:96px;height:96px;border-radius:3px;flex-shrink:0;background:#f4ecec;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;"><span class="material-symbols-outlined" style="color:#c8b8ba;font-size:28px;">photo_camera</span><span style="font-size:10px;color:#c8b8ba;">\uC0AC\uC9C4 \uC5C6\uC74C</span></div>';
 
     html += '<article class="letter-card ' + cardClass + '" style="transform:rotate(' + rotations[idx % 6] + 'deg)" data-lid="' + item.id + '">'
@@ -840,11 +907,11 @@ function renderBoard() {
       + '<div style="display:flex;gap:12px;padding-top:6px;flex:1;min-height:0;">'
       + photoHtml
       + '<div style="flex:1;min-width:0;display:flex;flex-direction:column;">'
-      + '<p class="letter-to" style="font-family:\'Nanum Pen Script\',cursive;font-size:20px;line-height:1.3;margin-bottom:6px;">To. ' + l.to + '</p>'
-      + '<p style="font-family:\'Nanum Myeongjo\',serif;font-size:13px;line-height:1.6;color:#4a3f3f;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;margin-bottom:8px;flex:1;">' + (l.body || '').split('\n')[0] + '</p>'
-      + '<p class="letter-to" style="font-family:\'Nanum Pen Script\',cursive;font-size:15px;line-height:1.3;margin-bottom:8px;opacity:0.75;">From. ' + l.from + '</p>'
+      + '<p class="letter-to" style="font-family:\'Nanum Pen Script\',cursive;font-size:20px;line-height:1.3;margin-bottom:6px;">To. ' + escapeHtml(l.to) + '</p>'
+      + '<p style="font-family:\'Nanum Myeongjo\',serif;font-size:13px;line-height:1.6;color:#4a3f3f;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;margin-bottom:8px;flex:1;">' + escapeHtml((l.body || '').split('\n')[0]) + '</p>'
+      + '<p class="letter-to" style="font-family:\'Nanum Pen Script\',cursive;font-size:15px;line-height:1.3;margin-bottom:8px;opacity:0.75;">From. ' + escapeHtml(l.from) + '</p>'
       + '<div style="display:flex;justify-content:space-between;align-items:center;">'
-      + '<span class="letter-date">' + l.date + '</span>'
+      + '<span class="letter-date">' + escapeHtml(l.date) + '</span>'
       + '<span class="comment-count" style="font-family:\'Nunito Sans\',sans-serif;font-size:12px;font-weight:700;display:flex;align-items:center;gap:3px;"><span class="material-symbols-outlined" style="font-size:15px;">chat_bubble</span>\uB313\uAE00 ' + (l.commentCount || 0) + '</span>'
       + '</div></div></div></article>';
   });
@@ -878,12 +945,12 @@ async function goDetail(lid) {
   document.getElementById('detail-from').style.color = tc;
   document.getElementById('detail-from').style.fontFamily = l.font || "'Nanum Pen Script',cursive";
   document.getElementById('detail-from').textContent = 'From. ' + l.from;
-  document.getElementById('detail-photos').innerHTML = (l.photos || []).map(src => '<img src="' + src + '" alt="">').join('');
+  document.getElementById('detail-photos').innerHTML = (l.photos || []).map(src => '<img src="' + photoUrl(src) + '" alt="">').join('');
 
   await loadComments(lid);
 
   const eb = document.getElementById('detail-edit-btn');
-  eb.style.display = currentUser === l.from ? 'flex' : 'none';
+  eb.style.display = auth.currentUser?.uid === l.ownerUid ? 'flex' : 'none';
   eb.onclick = () => goEdit(l);
 
   ['screen-board','screen-write','screen-settings'].forEach(id => document.getElementById(id).classList.remove('active'));
@@ -903,8 +970,8 @@ function renderComments(comments) {
   const list = document.getElementById('detail-comment-list');
   list.innerHTML = comments.map(c => {
     const ac = AVATAR_COLORS[c.name] || { bg:'#ffd1dc', color:'#880e4f' };
-    return '<div class="comment-item"><div class="comment-avatar" style="background:' + ac.bg + ';color:' + ac.color + ';">' + (c.name||'?')[0] + '</div>'
-      + '<div class="comment-bubble"><p class="comment-name">' + c.name + '</p><p class="comment-text">' + c.text + '</p><p class="comment-time">' + c.time + '</p></div></div>';
+    return '<div class="comment-item"><div class="comment-avatar" style="background:' + ac.bg + ';color:' + ac.color + ';">' + escapeHtml((c.name||'?')[0]) + '</div>'
+      + '<div class="comment-bubble"><p class="comment-name">' + escapeHtml(c.name) + '</p><p class="comment-text">' + escapeHtml(c.text) + '</p><p class="comment-time">' + escapeHtml(c.time) + '</p></div></div>';
   }).join('');
   document.getElementById('detail-comment-count').textContent = comments.length;
 }
@@ -915,7 +982,7 @@ async function submitComment() {
   if (!val || !currentLetterId) return;
   const now = new Date();
   const t = now.getFullYear() + '.' + String(now.getMonth()+1).padStart(2,'0') + '.' + String(now.getDate()).padStart(2,'0');
-  await addDoc(collection(db,'letters',currentLetterId,'comments'), { name:currentUser, text:val, time:t, createdAt:serverTimestamp() });
+  await addDoc(collection(db,'letters',currentLetterId,'comments'), { authorUid:auth.currentUser.uid, name:currentUser, text:val, time:t, createdAt:serverTimestamp() });
   const lr = doc(db,'letters',currentLetterId);
   const ls = await getDoc(lr);
   if (ls.exists()) await updateDoc(lr, { commentCount:(ls.data().commentCount||0)+1 });
@@ -932,7 +999,7 @@ function goWrite() {
   pendingPhotoFiles = [null,null,null];
   document.getElementById('write-back-label').textContent = '\uAC8C\uC2DC\uD310\uC73C\uB85C';
   document.getElementById('btn-send-label').textContent = '\uD3B8\uC9C0 \uBCF4\uB0B4\uAE30';
-  document.getElementById('field-from').readOnly = false;
+  document.getElementById('field-from').readOnly = true;
   document.getElementById('field-from').style.opacity = '1';
   document.getElementById('field-from').value = currentUser;
   document.getElementById('field-to').value = '';
@@ -1012,7 +1079,7 @@ async function uploadPhotos(lid) {
   const urls=[];
   for(let i=0;i<3;i++){
     if(pendingPhotoFiles[i]){
-      const sr=ref(storage,'letters/'+lid+'/photo_'+i+'_'+Date.now());
+      const sr=ref(storage,'letters/'+auth.currentUser.uid+'/'+lid+'/photo_'+i+'_'+Date.now());
       await uploadBytes(sr,pendingPhotoFiles[i]);
       urls.push(await getDownloadURL(sr));
     }
@@ -1043,7 +1110,7 @@ async function submitLetter() {
     }else{
       const newRef=doc(collection(db,'letters'));
       const photos=await uploadPhotos(newRef.id);
-      await setDoc(newRef,{to,from,body,bg:currentBg,font:currentFont,textColor:ac.color,date:dateStr,photos,commentCount:0,createdAt:serverTimestamp()});
+      await setDoc(newRef,{ownerUid:auth.currentUser.uid,to,from:currentUser,body,bg:currentBg,font:currentFont,textColor:ac.color,date:dateStr,photos,commentCount:0,createdAt:serverTimestamp()});
       await loadBoard();
       alert('\uD3B8\uC9C0\uAC00 \uC804\uB2EC\uB418\uC5C8\uC5B4\uC694 \uD83D\uDC8C');
       goBoard();
@@ -1073,11 +1140,15 @@ function setAutoDate() {
 // ── 로그인
 let loginPending = false;
 function showLoginError(error) {
-  console.error(error);
-  const code = String(error.code || '').replace('firestore/', '');
-  document.getElementById('login-error').textContent = code === 'permission-denied'
-    ? '데이터베이스 접근이 차단되어 로그인할 수 없어요. 관리자에게 Firebase 보안 규칙을 확인해 달라고 해주세요.'
-    : '서버에 연결하지 못했어요. 인터넷 연결을 확인하고 다시 시도해 주세요.';
+  console.error(error.code || 'login-failed');
+  const code = String(error.code || '').split('/').pop();
+  const messages = {
+    'unauthenticated':'비밀번호가 틀렸어요. 다시 확인해 주세요.',
+    'resource-exhausted':'입력 횟수가 너무 많아요. 잠시 후 다시 시도해 주세요. 반복되면 최대 24시간 기다려 주세요.',
+    'permission-denied':'접근 권한을 확인하지 못했어요. 다시 로그인해 주세요.',
+    'invalid-argument':'비밀번호는 숫자 4자리로 입력해 주세요.'
+  };
+  document.getElementById('login-error').textContent = messages[code] || '서버에 연결하지 못했어요. 잠시 후 다시 시도해 주세요.';
 }
 async function tryLogin() {
   if(loginPending)return;
@@ -1092,16 +1163,10 @@ async function tryLogin() {
   button.textContent='확인 중…';
   errEl.textContent='';
   try {
-  const savedPw=await getMemberPw(name);
-  if(savedPw===null){errEl.textContent='\uB4F1\uB85D\uB41C \uBA64\uBC84\uAC00 \uC544\uB2C8\uC5D0\uC694.';return;}
-  if(savedPw!==pw){errEl.textContent='\uBE44\uBC00\uBC88\uD638\uAC00 \uD2C0\uB838\uC5B4\uC694.';document.getElementById('login-pw').value='';return;}
-  currentUser=name;
-  sessionStorage.setItem('currentUser', name);
-  ['board-username','write-username','detail-username'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=name;});
-  document.getElementById('screen-login').classList.remove('active');
-  document.getElementById('screen-board').classList.add('active');
-  await loadBoard();
-  window.scrollTo(0,0);
+  if(!/^[0-9]{4}$/.test(pw)) { errEl.textContent='비밀번호는 숫자 4자리로 입력해 주세요.'; return; }
+  const result=await callServer('familyLogin',{memberId:name,pin:pw});
+  await signInWithCustomToken(auth,result.token);
+  await enterBoard(result.name);
   } catch(error) {
     showLoginError(error);
   } finally {
@@ -1111,7 +1176,13 @@ async function tryLogin() {
   }
 }
 
-function doLogout() {
+async function doLogout() {
+  await signOut(auth);
+  lettersCache=[];
+  document.getElementById('board-grid').replaceChildren();
+  document.getElementById('detail-body').textContent='';
+  document.getElementById('detail-photos').replaceChildren();
+  document.getElementById('detail-comment-list').replaceChildren();
   currentUser=''; selectedLoginUser='';
   sessionStorage.removeItem('currentUser');
   document.getElementById('login-pw').value='';
@@ -1120,7 +1191,7 @@ function doLogout() {
   document.getElementById('login-step2').style.display='none';
   ['screen-board','screen-write','screen-detail','screen-settings'].forEach(id=>document.getElementById(id).classList.remove('active'));
   document.getElementById('screen-login').classList.add('active');
-  bindLoginEvents();
+  await loadProfiles();
   window.scrollTo(0,0);
 }
 
@@ -1152,8 +1223,8 @@ async function renderMembersList() {
     const ac=AVATAR_COLORS[name]||{bg:'#f4ecec',color:'#78555e'};
     const badge=(name===currentUser)?'<span class="member-self-badge">\uB098</span>':'';
     html+='<div class="settings-row"><div style="display:flex;align-items:center;gap:10px;flex:1;">'
-      +'<div style="width:32px;height:32px;border-radius:50%;background:'+ac.bg+';color:'+ac.color+';display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;flex-shrink:0;">'+name[0]+'</div>'
-      +'<span style="font-size:16px;color:#4a3f3f;">'+name+'</span></div>'+badge+'</div>';
+      +'<div style="width:32px;height:32px;border-radius:50%;background:'+ac.bg+';color:'+ac.color+';display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;flex-shrink:0;">'+escapeHtml(name[0])+'</div>'
+      +'<span style="font-size:16px;color:#4a3f3f;">'+escapeHtml(name)+'</span></div>'+badge+'</div>';
   }
   el.innerHTML=html;
 }
@@ -1163,11 +1234,11 @@ async function saveNickname() {
   const msgEl=document.getElementById('nickname-msg');
   if(!newName){msgEl.className='settings-msg err';msgEl.textContent='\uC774\uB984\uC744 \uC785\uB825\uD574 \uC8FC\uC138\uC694.';return;}
   if(newName===currentUser){msgEl.className='settings-msg err';msgEl.textContent='\uD604\uC7AC \uB2C9\uB124\uC784\uACFC \uAC19\uC544\uC694.';return;}
-  const existing=await getMemberPw(newName);
-  if(existing!==null){msgEl.className='settings-msg err';msgEl.textContent='\uC774\uBBF8 \uC0AC\uC6A9 \uC911\uC778 \uC774\uB984\uC774\uC5D0\uC694.';return;}
-  const oldPw=await getMemberPw(currentUser);
-  await setDoc(doc(db,'members',newName),{pw:oldPw});
-  await deleteDoc(doc(db,'members',currentUser));
+  try {
+    await callServer('familyRename',{name:newName});
+  } catch(error) {
+    msgEl.className='settings-msg err';msgEl.textContent=error.message;return;
+  }
   currentUser=newName;
   ['board-username','write-username','detail-username'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=newName;});
   const ac=AVATAR_COLORS[newName]||{bg:'#f4ecec',color:'#78555e'};
@@ -1187,12 +1258,14 @@ async function savePassword() {
   const newPw2=document.getElementById('new-pw2').value.trim();
   const msgEl=document.getElementById('password-msg');
   if(!curPw||!newPw||!newPw2){msgEl.className='settings-msg err';msgEl.textContent='\uBAA8\uB4E0 \uCE78\uC744 \uCC44\uC6CC \uC8FC\uC138\uC694.';return;}
-  const savedPw=await getMemberPw(currentUser);
-  if(savedPw!==curPw){msgEl.className='settings-msg err';msgEl.textContent='\uD604\uC7AC \uBE44\uBC00\uBC88\uD638\uAC00 \uD2C0\uB838\uC5B4\uC694.';return;}
-  if(newPw.length!==4){msgEl.className='settings-msg err';msgEl.textContent='\uC0C8 \uBE44\uBC00\uBC88\uD638\uB294 4\uC790\uB9AC\uC5EC\uC57C \uD574\uC694.';return;}
-  if(newPw!==newPw2){msgEl.className='settings-msg err';msgEl.textContent='\uC0C8 \uBE44\uBC00\uBC88\uD638\uAC00 \uC77C\uCE58\uD558\uC9C0 \uC54A\uC544\uC694.';return;}
-  if(newPw===curPw){msgEl.className='settings-msg err';msgEl.textContent='\uD604\uC7AC \uBE44\uBC00\uBC88\uD638\uC640 \uB2E4\uB974\uAC8C \uC124\uC815\uD574 \uC8FC\uC138\uC694.';return;}
-  await updateDoc(doc(db,'members',currentUser),{pw:newPw});
+  if(!/^[0-9]{4}$/.test(newPw)){msgEl.className='settings-msg err';msgEl.textContent='새 비밀번호는 숫자 4자리로 입력해 주세요.';return;}
+  if(newPw!==newPw2){msgEl.className='settings-msg err';msgEl.textContent='새 비밀번호가 일치하지 않아요.';return;}
+  try {
+    const result=await callServer('familyChangePin',{currentPin:curPw,newPin:newPw});
+    await signInWithCustomToken(auth,result.token);
+  } catch(error) {
+    msgEl.className='settings-msg err';msgEl.textContent=error.message;return;
+  }
   msgEl.className='settings-msg ok';msgEl.textContent='\uBE44\uBC00\uBC88\uD638\uAC00 \uBCC0\uACBD\uB418\uC5C8\uC5B4\uC694!';
   ['cur-pw','new-pw','new-pw2'].forEach(id=>document.getElementById(id).value='');
   setTimeout(()=>{document.getElementById('password-form').classList.remove('open');msgEl.textContent='';},1200);
@@ -1222,28 +1295,6 @@ let loginEventsBound = false;
 function bindLoginEvents() {
   if(loginEventsBound)return;
   loginEventsBound=true;
-  var pd=[
-    {id:'pc0',bg:'#ffd1dc',color:'#880e4f',name:'\uC9C4\uC6D0'},
-    {id:'pc1',bg:'#bbdefb',color:'#0d47a1',name:'\uC815\uC544'},
-    {id:'pc2',bg:'#c8e6c9',color:'#1b5e20',name:'\uC0C1\uD5CC'},
-    {id:'pc3',bg:'#e1bee7',color:'#4a148c',name:'\uB3C4\uACBD'},
-    {id:'pc4',bg:'#fff9c4',color:'#e65100',name:'\uC11C\uD604'}
-  ];
-  pd.forEach(function(p){
-    var el=document.getElementById(p.id);
-    if(!el)return;
-    el.addEventListener('click',function(){
-      selectedLoginUser=p.name;
-      var av=document.getElementById('selected-avatar');
-      av.textContent=p.name[0];av.style.background=p.bg;av.style.color=p.color;
-      document.getElementById('selected-name').textContent=p.name;
-      document.getElementById('login-step1').style.display='none';
-      document.getElementById('login-step2').style.display='block';
-      document.getElementById('login-pw').value='';
-      document.getElementById('login-error').textContent='';
-      document.getElementById('login-pw').focus();
-    });
-  });
   var cb=document.getElementById('btn-change');
   if(cb)cb.addEventListener('click',function(){
     selectedLoginUser='';
@@ -1343,21 +1394,17 @@ async function init() {
   bindLoginEvents();
   bindAllEvents();
   try {
-  await initMembers();
-
-  // 새로고침 시 로그인 상태 복원
-  const savedUser = sessionStorage.getItem('currentUser');
-  if (savedUser) {
-    const pw = await getMemberPw(savedUser);
-    if (pw !== null) {
-      currentUser = savedUser;
-      ['board-username','write-username','detail-username'].forEach(id=>{
-        const el=document.getElementById(id); if(el) el.textContent=savedUser;
-      });
-      document.getElementById('screen-login').classList.remove('active');
-      document.getElementById('screen-board').classList.add('active');
-      await loadBoard();
-    }
+  sessionStorage.removeItem('currentUser');
+  document.querySelector('.profile-grid').replaceChildren();
+  document.getElementById('login-error').textContent='가족 정보를 불러오고 있어요…';
+  await setPersistence(auth,browserSessionPersistence);
+  await auth.authStateReady();
+  await loadProfiles();
+  document.getElementById('login-error').textContent='';
+  if(auth.currentUser) {
+    const member = await getDoc(doc(db,'members',auth.currentUser.uid));
+    if(member.exists() && member.data().enabled)await enterBoard(member.data().name);
+    else await signOut(auth);
   }
   } catch(error) {
     showLoginError(error);
