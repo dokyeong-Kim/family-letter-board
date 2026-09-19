@@ -608,8 +608,8 @@
         <input class="login-input" id="login-pw" type="password" placeholder="&#9679;&#9679;&#9679;&#9679;"
           maxlength="4" inputmode="numeric" autocomplete="off">
         <button class="login-btn" id="btn-enter">들어가기</button>
-        <p class="login-error" id="login-error"></p>
       </div>
+      <p class="login-error" id="login-error" role="alert" aria-live="polite"></p>
 
     </div>
   </div>
@@ -1071,12 +1071,27 @@ function setAutoDate() {
 }
 
 // ── 로그인
+let loginPending = false;
+function showLoginError(error) {
+  console.error(error);
+  const code = String(error.code || '').replace('firestore/', '');
+  document.getElementById('login-error').textContent = code === 'permission-denied'
+    ? '데이터베이스 접근이 차단되어 로그인할 수 없어요. 관리자에게 Firebase 보안 규칙을 확인해 달라고 해주세요.'
+    : '서버에 연결하지 못했어요. 인터넷 연결을 확인하고 다시 시도해 주세요.';
+}
 async function tryLogin() {
+  if(loginPending)return;
   const name=selectedLoginUser;
   const pw=document.getElementById('login-pw').value.trim();
   const errEl=document.getElementById('login-error');
   if(!name){errEl.textContent='\uD504\uB85C\uD544\uC744 \uC120\uD0DD\uD574 \uC8FC\uC138\uC694.';return;}
   if(!pw){errEl.textContent='\uBE44\uBC00\uBC88\uD638\uB97C \uC785\uB825\uD574 \uC8FC\uC138\uC694.';return;}
+  const button=document.getElementById('btn-enter');
+  loginPending=true;
+  button.disabled=true;
+  button.textContent='확인 중…';
+  errEl.textContent='';
+  try {
   const savedPw=await getMemberPw(name);
   if(savedPw===null){errEl.textContent='\uB4F1\uB85D\uB41C \uBA64\uBC84\uAC00 \uC544\uB2C8\uC5D0\uC694.';return;}
   if(savedPw!==pw){errEl.textContent='\uBE44\uBC00\uBC88\uD638\uAC00 \uD2C0\uB838\uC5B4\uC694.';document.getElementById('login-pw').value='';return;}
@@ -1087,6 +1102,13 @@ async function tryLogin() {
   document.getElementById('screen-board').classList.add('active');
   await loadBoard();
   window.scrollTo(0,0);
+  } catch(error) {
+    showLoginError(error);
+  } finally {
+    loginPending=false;
+    button.disabled=false;
+    button.textContent='들어가기';
+  }
 }
 
 function doLogout() {
@@ -1196,7 +1218,10 @@ function setFont(el,font) {
 }
 
 // ── 로그인 이벤트
+let loginEventsBound = false;
 function bindLoginEvents() {
+  if(loginEventsBound)return;
+  loginEventsBound=true;
   var pd=[
     {id:'pc0',bg:'#ffd1dc',color:'#880e4f',name:'\uC9C4\uC6D0'},
     {id:'pc1',bg:'#bbdefb',color:'#0d47a1',name:'\uC815\uC544'},
@@ -1315,9 +1340,10 @@ async function init() {
   document.querySelectorAll('#days-count').forEach(el => {
     el.textContent = days.toLocaleString();
   });
-  await initMembers();
   bindLoginEvents();
   bindAllEvents();
+  try {
+  await initMembers();
 
   // 새로고침 시 로그인 상태 복원
   const savedUser = sessionStorage.getItem('currentUser');
@@ -1332,6 +1358,9 @@ async function init() {
       document.getElementById('screen-board').classList.add('active');
       await loadBoard();
     }
+  }
+  } catch(error) {
+    showLoginError(error);
   }
 }
 
