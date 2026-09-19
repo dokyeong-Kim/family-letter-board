@@ -957,7 +957,7 @@ function goEdit(l) {
   document.getElementById('field-content').value = l.body;
   applySwatch(currentBg); applyFont(currentFont);
   const slots = document.querySelectorAll('.photo-slot');
-  (l.photos||[]).forEach((src,i) => { if(slots[i]) setSlotWithDelete(slots[i], i, photoUrl(src)); });
+  (l.photos||[]).forEach((src,i) => { if(slots[i]) if (photoUrl(src)) setSlotWithDelete(slots[i], i, src); });
   for(let i=(l.photos||[]).length;i<3;i++){if(slots[i])resetSlot(slots[i],i);}
   setAutoDate();
   document.getElementById('screen-detail').classList.remove('active');
@@ -1005,12 +1005,25 @@ function handlePhoto(e) {
   setSlotWithDelete(slots[uploadSlot], uploadSlot, url);
   e.target.value='';
 }
+// 휴대폰 원본 사진은 크고 HEIC일 때가 많아서 올리기 전에 JPEG로 줄임
+async function shrinkImage(file) {
+  try {
+    const bmp = await createImageBitmap(file);
+    const s = Math.min(1, 1600 / Math.max(bmp.width, bmp.height));
+    const c = document.createElement('canvas');
+    c.width = Math.round(bmp.width * s); c.height = Math.round(bmp.height * s);
+    c.getContext('2d').drawImage(bmp, 0, 0, c.width, c.height);
+    const blob = await new Promise(r => c.toBlob(r, 'image/jpeg', 0.85));
+    return blob || file;
+  } catch { return file; }
+}
 async function uploadPhotos(lid) {
   const urls=[];
   for(let i=0;i<3;i++){
     if(pendingPhotoFiles[i]){
       const sr=ref(storage,'letters/'+auth.currentUser.uid+'/'+lid+'/photo_'+i+'_'+Date.now());
-      await uploadBytes(sr,pendingPhotoFiles[i]);
+      const img=await shrinkImage(pendingPhotoFiles[i]);
+      await uploadBytes(sr,img,{contentType:img.type||'image/jpeg'});
       urls.push(await getDownloadURL(sr));
     }
   }
@@ -1045,7 +1058,7 @@ async function submitLetter() {
       alert('편지가 전달되었어요 💌');
       goBoard();
     }
-  }catch(e){console.error(e);alert('저장 중 오류가 발생했어요.');}
+  }catch(e){console.error(e);alert('저장 중 오류가 발생했어요.\n(' + (e.code || e.message || e) + ')');}
   finally{btn.disabled=false;}
 }
 
