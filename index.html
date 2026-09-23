@@ -243,6 +243,14 @@
   .detail-photos { display:flex; gap:14px; flex-wrap:wrap; margin-bottom:22px; }
   .detail-photos img { width:120px; height:150px; object-fit:cover; border:6px solid #fff; box-shadow:0 3px 8px rgba(42,34,216,.25); }
   .detail-photos img:nth-child(odd) { transform:rotate(-2deg); } .detail-photos img:nth-child(even) { transform:rotate(2deg); }
+  .detail-photos img { cursor:zoom-in; }
+  /* 사진 크게 보기 */
+  .photo-viewer { display:none; position:fixed; inset:0; z-index:85; background:rgba(55,42,222,.9); }
+  .photo-viewer.show { display:flex; }
+  .photo-viewer-inner { width:100%; max-width:var(--shell); margin:auto; padding:24px 20px; display:flex; flex-direction:column; align-items:center; gap:22px; }
+  .photo-viewer img { max-width:100%; max-height:66vh; object-fit:contain; border:8px solid #fff; background:#fff; box-shadow:0 12px 34px rgba(0,0,0,.35); }
+  .photo-viewer .viewer-count { color:#fff; font-size:15px; }
+  #viewer-close { border:2px solid var(--ink); }
   .detail-sign { text-align:right; }
   /* 손글씨체는 도트체보다 작아 보여서 키움 */
   .detail-body[style*="Nanum Pen"],.content-area[style*="Nanum Pen"] { font-size:27px; }
@@ -545,6 +553,14 @@
   <span class="bubble" data-icon="bubble"></span>
   <div class="bar"></div>
   <p>편지를 불러오고 있어요...</p>
+</div>
+
+<!-- 사진 크게 보기 -->
+<div class="photo-viewer" id="photo-viewer" role="dialog" aria-modal="true" aria-label="사진 크게 보기">
+  <div class="photo-viewer-inner">
+    <img id="viewer-img" alt="편지 사진">
+    <button class="pink-btn" id="viewer-close" type="button">닫기</button>
+  </div>
 </div>
 
 <!-- 뜯어서 편지 열어보기 -->
@@ -855,6 +871,37 @@ function tearEnvelope() {
   const lid = envLid;
   setTimeout(async () => { await goDetail(lid); closeEnvelope(); }, 620);
 }
+// 사진 크게 보기
+function openPhoto(src) {
+  const v = document.getElementById('photo-viewer');
+  document.getElementById('viewer-img').src = src;
+  v.classList.add('show');
+  document.body.style.overflow = 'hidden';
+  document.getElementById('viewer-close').focus();
+}
+function closePhoto() {
+  const v = document.getElementById('photo-viewer');
+  if (!v.classList.contains('show')) return;
+  v.classList.remove('show');
+  document.getElementById('viewer-img').removeAttribute('src');
+  document.body.style.overflow = '';
+}
+function bindPhotoViewer() {
+  const photos = document.getElementById('detail-photos');
+  photos.addEventListener('click', e => {
+    const img = e.target.closest('img');
+    if (img) openPhoto(img.src);
+  });
+  photos.addEventListener('keydown', e => {
+    const img = e.target.closest('img');
+    if (img && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); openPhoto(img.src); }
+  });
+  const v = document.getElementById('photo-viewer');
+  document.getElementById('viewer-close').addEventListener('click', closePhoto);
+  v.addEventListener('click', e => { if (e.target === v || e.target.classList.contains('photo-viewer-inner')) closePhoto(); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closePhoto(); });
+}
+
 function bindEnvelope() {
   const ov = document.getElementById('open-overlay');
   const flap = document.getElementById('env-flap');
@@ -892,7 +939,11 @@ async function goDetail(lid) {
   document.getElementById('detail-body').textContent = l.body;
   document.getElementById('detail-from').style.fontFamily = l.font || "'Nanum Pen Script',cursive";
   document.getElementById('detail-from').textContent = l.from;
-  document.getElementById('detail-photos').innerHTML = (l.photos || []).map(src => '<img src="' + photoUrl(src) + '" alt="">').join('');
+  document.getElementById('detail-photos').innerHTML = (l.photos || [])
+    .map(src => photoUrl(src))
+    .filter(Boolean)
+    .map(src => '<img src="' + src + '" alt="\uD3B8\uC9C0 \uC0AC\uC9C4" tabindex="0" role="button">')
+    .join('');
 
   await loadComments(lid);
 
@@ -1099,6 +1150,7 @@ function setAutoDate() {
 }
 // 지금 보이는 화면에 맞춰 하단 탭 표시
 function syncDock() {
+  closePhoto();
   const active = document.querySelector('.screen.active');
   const name = active ? active.id.replace('screen-','') : 'login';
   document.body.dataset.screen = name;
@@ -1354,6 +1406,7 @@ function bindAllEvents() {
   syncDock();
 
   bindEnvelope();
+  bindPhotoViewer();
 
   // 뒤로가기
   document.getElementById('detail-back-btn').addEventListener('click', goBoard);
