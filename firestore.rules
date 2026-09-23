@@ -1,0 +1,35 @@
+rules_version = '2';
+
+// 우리가족 마음 저장소 — 가족(members에 등록된 계정)만 읽고 쓸 수 있어요.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isFamily() {
+      return request.auth != null
+        && exists(/databases/$(database)/documents/members/$(request.auth.uid));
+    }
+
+    // 가족 명단: 읽기만 가능, 변경은 서버(Cloud Functions)에서만
+    match /members/{uid} {
+      allow read: if isFamily();
+      allow write: if false;
+    }
+
+    match /letters/{letterId} {
+      allow read: if isFamily();
+      allow create: if isFamily() && request.resource.data.ownerUid == request.auth.uid;
+      // 편지 수정은 쓴 사람만. 단, 댓글 수(commentCount)는 댓글 단 사람도 올릴 수 있어야 해요.
+      allow update: if isFamily() && (
+        resource.data.ownerUid == request.auth.uid
+        || request.resource.data.diff(resource.data).affectedKeys().hasOnly(['commentCount'])
+      );
+      allow delete: if isFamily() && resource.data.ownerUid == request.auth.uid;
+
+      match /comments/{commentId} {
+        allow read: if isFamily();
+        allow create: if isFamily() && request.resource.data.authorUid == request.auth.uid;
+        allow update, delete: if isFamily() && resource.data.authorUid == request.auth.uid;
+      }
+    }
+  }
+}
